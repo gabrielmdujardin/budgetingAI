@@ -13,25 +13,30 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
   return (
     <div className="fixed inset-0 z-50 md:hidden">
-      <button
-        className="absolute inset-0 bg-black/40"
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
         onClick={onClose}
-        aria-label="Fechar menu"
-        type="button"
+        aria-hidden="true"
       />
-      <aside className="relative h-full w-80 max-w-[86vw] bg-white shadow-xl">
-        <div className="flex h-14 items-center justify-between border-b border-neutral-200 px-4">
-          <span className="text-lg font-extrabold text-[#006B2B]">Budgeting</span>
+
+      {/* Sliding Drawer */}
+      <aside className="fixed inset-y-0 left-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-white shadow-2xl transition-transform">
+        <div className="flex h-14 items-center justify-between border-b border-[#006B2B] bg-[#009C3B] px-4 text-white">
+          <span className="text-lg font-extrabold tracking-tight">Budgeting</span>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-[#444444] hover:bg-neutral-100"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white transition-colors hover:bg-white/15"
             aria-label="Fechar menu"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="space-y-1 p-4">
+        <div className="p-4 pb-2 text-xs font-bold uppercase text-[#666666]">
+          Menu principal
+        </div>
+        <nav className="space-y-1 px-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -42,14 +47,14 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 href={item.href}
                 onClick={onClose}
                 className={clsx(
-                  'flex items-center gap-3 border-l-4 px-3 py-3 text-sm font-semibold',
+                  'flex items-center gap-3 rounded-md border-l-4 px-3 py-3 text-sm font-semibold transition-colors',
                   isActive
                     ? 'border-[#009C3B] bg-[#009C3B]/10 text-[#006B2B]'
-                    : 'border-transparent text-[#555555]'
+                    : 'border-transparent text-[#555555] hover:bg-neutral-50 hover:text-[#222222]'
                 )}
               >
-                <Icon className="h-4 w-4" />
-                {item.label}
+                <Icon className={clsx('h-5 w-5', isActive ? 'text-[#009C3B]' : 'text-[#777777]')} />
+                <span>{item.label}</span>
               </Link>
             );
           })}

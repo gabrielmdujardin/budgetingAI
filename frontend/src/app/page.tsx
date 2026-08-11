@@ -42,7 +42,7 @@ export default function DashboardPage() {
         <p className="mt-1 text-base font-medium text-[#666666]">Veja como estao suas financas</p>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <DashboardCard
           title="Saldo atual"
           value={loadingTransactions ? 'Carregando...' : formatCurrency(balance)}
@@ -63,13 +63,6 @@ export default function DashboardPage() {
           detail="-5% em relacao ao mes anterior"
           icon={<TrendingDown className="h-5 w-5" />}
           tone="expense"
-        />
-        <DashboardCard
-          title="Metas ativas"
-          value="3"
-          detail="2 em dia · 1 em atraso"
-          icon={<Flag className="h-5 w-5" />}
-          tone="warning"
         />
       </section>
 

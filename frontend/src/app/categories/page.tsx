@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { PlusCircle, Tags } from 'lucide-react';
-import { CategoryBadge, CATEGORY_EMOJIS } from '@/components/ui/CategoryBadge';
+import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { transactionService } from '@/services/transactionService';
 import { Category, CATEGORY_LABELS } from '@/types/transaction';
@@ -37,17 +37,14 @@ export default function CategoriesPage() {
 
             return (
               <article key={key} className="rounded-md border border-neutral-200 bg-white p-5 shadow-sm">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{CATEGORY_EMOJIS[key]}</span>
-                    <div>
-                      <h2 className="font-extrabold text-[#222222]">{item.label}</h2>
-                      <p className="mt-1 text-sm text-[#666666]">Total registrado</p>
-                    </div>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-extrabold text-[#222222]">{item.label}</h2>
+                    <p className="mt-1 text-sm text-[#666666]">Total registrado</p>
                   </div>
                   <CategoryBadge category={key} compact />
                 </div>
-                <p className="mt-5 font-mono text-2xl font-extrabold text-[#222222]">{formatCurrency(total)}</p>
+                <p className="mt-5 text-2xl font-extrabold text-[#222222]">{formatCurrency(total)}</p>
               </article>
             );
           })}

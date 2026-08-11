@@ -1,7 +1,13 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/layout/Providers';
 import { AppShell } from '@/components/layout/AppShell';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Budgeting - Portal financeiro pessoal',
@@ -14,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className="min-h-screen bg-[#F5F5F5] text-[#222222] antialiased selection:bg-[#009C3B] selection:text-white">
+    <html lang="pt-BR" className={inter.className}>
+      <body className={`${inter.className} min-h-screen bg-[#F5F5F5] text-[#222222] antialiased selection:bg-[#009C3B] selection:text-white`}>
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>

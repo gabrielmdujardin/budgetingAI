@@ -15,8 +15,8 @@ export function ActivityList({ transactions }: { transactions: Transaction[] }) 
 
   const items = [
     {
-      icon: Flag,
-      text: 'Meta "Reserva de Emergencia" permanece em acompanhamento',
+      icon: CheckCircle2,
+      text: 'Assistente financeiro por voz ativo',
       tone: 'text-[#009C3B]',
     },
     {
