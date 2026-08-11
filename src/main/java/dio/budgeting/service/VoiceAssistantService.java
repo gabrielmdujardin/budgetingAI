@@ -258,17 +258,119 @@ public class VoiceAssistantService {
     }
 
     private Long extractAmountInCents(String text) {
-        Matcher matcher = MONEY_PATTERN.matcher(text);
-        if (!matcher.find()) {
+        if (text == null || text.isBlank()) {
             return null;
         }
 
-        String raw = matcher.group(1).replace(',', '.');
-        BigDecimal value = new BigDecimal(raw);
-        if (text.contains("centavo")) {
-            return value.setScale(0, RoundingMode.HALF_UP).longValue();
+        String lowerText = text.toLowerCase(PT_BR);
+
+        // 1. Check for "X mil" or "X,Y mil" (e.g. "2 mil", "1,5 mil", "1.5 mil")
+        Matcher milMatcher = Pattern.compile("(\\d+(?:[\\.,]\\d{1,2})?)\\s*mil", Pattern.CASE_INSENSITIVE).matcher(lowerText);
+        if (milMatcher.find()) {
+            try {
+                String raw = milMatcher.group(1).replace(',', '.');
+                BigDecimal val = new BigDecimal(raw).multiply(BigDecimal.valueOf(1000));
+                return val.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+            } catch (Exception ignored) {}
         }
-        return value.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+
+        // 2. Extract formatted digits (e.g. "1.000", "1.500,50", "1000", "10.000,00", "45,50")
+        Pattern pattern = Pattern.compile("(\\d{1,3}(?:[\\.,\\s]\\d{3})*(?:[\\.,]\\d{1,2})?|\\d+)");
+        Matcher matcher = pattern.matcher(text);
+
+        Long bestDigitAmount = null;
+        while (matcher.find()) {
+            String raw = matcher.group(1).trim();
+            Long cents = parseRawNumberToCents(raw, text);
+            if (cents != null && cents > 0) {
+                bestDigitAmount = cents;
+                // If the digit amount is >= 100000 cents (R$ 1.000), return immediately
+                if (cents >= 100000) {
+                    return cents;
+                }
+            }
+        }
+
+        if (bestDigitAmount != null) {
+            return bestDigitAmount;
+        }
+
+        // 3. Fallback to spoken "mil" (e.g. "gastei mil reais", "dois mil e quinhentos")
+        return parseSpokenMil(lowerText);
+    }
+
+    private Long parseRawNumberToCents(String raw, String fullText) {
+        try {
+            String clean = raw.replaceAll("\\s+", "");
+
+            if (clean.contains(".") && clean.contains(",")) {
+                int lastDot = clean.lastIndexOf('.');
+                int lastComma = clean.lastIndexOf(',');
+                if (lastComma > lastDot) {
+                    // Brazilian format: 1.500,50 -> 1500.50
+                    clean = clean.replace(".", "").replace(',', '.');
+                } else {
+                    // US format: 1,500.50 -> 1500.50
+                    clean = clean.replace(",", "");
+                }
+            } else if (clean.contains(".")) {
+                int dotIndex = clean.lastIndexOf('.');
+                int digitsAfterDot = clean.length() - 1 - dotIndex;
+                if (digitsAfterDot == 3) {
+                    // Thousand separator: 1.000, 10.000
+                    clean = clean.replace(".", "");
+                }
+            } else if (clean.contains(",")) {
+                int commaIndex = clean.lastIndexOf(',');
+                int digitsAfterComma = clean.length() - 1 - commaIndex;
+                if (digitsAfterComma == 3) {
+                    // Thousand separator: 1,000
+                    clean = clean.replace(",", "");
+                } else {
+                    // Decimal comma: 45,50
+                    clean = clean.replace(',', '.');
+                }
+            }
+
+            BigDecimal value = new BigDecimal(clean);
+            if (fullText.toLowerCase(PT_BR).contains("centavo")) {
+                return value.setScale(0, RoundingMode.HALF_UP).longValue();
+            }
+            return value.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Long parseSpokenMil(String text) {
+        if (!text.contains("mil")) return null;
+
+        long thousands = 0;
+        if (text.contains("dez mil")) thousands = 10000;
+        else if (text.contains("nove mil")) thousands = 9000;
+        else if (text.contains("oito mil")) thousands = 8000;
+        else if (text.contains("sete mil")) thousands = 7000;
+        else if (text.contains("seis mil")) thousands = 6000;
+        else if (text.contains("cinco mil")) thousands = 5000;
+        else if (text.contains("quatro mil")) thousands = 4000;
+        else if (text.contains("três mil") || text.contains("tres mil")) thousands = 3000;
+        else if (text.contains("dois mil")) thousands = 2000;
+        else if (text.contains("um mil") || text.contains("mil")) thousands = 1000;
+
+        if (thousands == 0) return null;
+
+        long rest = 0;
+        if (text.contains("novecentos")) rest += 900;
+        else if (text.contains("oitocentos")) rest += 800;
+        else if (text.contains("setecentos")) rest += 700;
+        else if (text.contains("seiscentos")) rest += 600;
+        else if (text.contains("quinhentos")) rest += 500;
+        else if (text.contains("quatrocentos")) rest += 400;
+        else if (text.contains("trezentos")) rest += 300;
+        else if (text.contains("duzentos")) rest += 200;
+        else if (text.contains("cem") || text.contains("cento")) rest += 100;
+
+        return (thousands + rest) * 100;
     }
 
     private SummaryResponse buildSummary(List<TransactionResponse> transactions) {
