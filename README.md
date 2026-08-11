@@ -1,4 +1,4 @@
-# 💰 Budgeting AI — Controladoria Financeira com Assistente de Voz e IA
+#  Budgeting AI — Controladoria Financeira com Assistente de Voz e IA
 
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
@@ -12,28 +12,28 @@
 
 ## 🇧🇷 Português
 
-### 📌 Sobre o Projeto
+###  Sobre o Projeto
 O **Budgeting AI** é um sistema completo de gestão e controladoria financeira pessoal acionado por inteligência artificial e voz. O projeto une um **Backend robusto em Java 21 com Spring Boot** a um **Frontend moderno e responsivo em Next.js 16**, integrado a um motor local de IA (**Faster-Whisper**) para transcrição e interpretação de comandos de voz em tempo real.
 
 Com o assistente de voz, o usuário pode gravar áudios ou enviar arquivos como *"Gastei 1500 reais no mercado"* ou *"Quanto tenho de saldo?"*, e a aplicação identifica automaticamente valores (mesmo falados por extenso ou formatados com milhar), escolhe a categoria adequada, salva a transação no banco de dados MySQL e sintetiza a resposta por áudio e texto.
 
 ---
 
-### 🚀 Funcionalidades Principais
-- 🎤 **Assistente Financeiro por Voz**: Gravação e processamento de áudio local com Faster-Whisper.
-- 🧠 **Interpretação de Intenções por IA**:
+###  Funcionalidades Principais
+-  **Assistente Financeiro por Voz**: Gravação e processamento de áudio local com Faster-Whisper.
+-  **Interpretação de Intenções por IA**:
   - Cadastro automático de despesas e receitas por comando falado.
   - Consulta de saldo total e estimado.
   - Listagem e filtragem de lançamentos por categoria por voz.
-- 🔢 **Extrator Inteligente de Valores**: Processamento de valores monetários complexos como `"1.000"`, `"1.500,50"`, `"2 mil"`, `"mil reais"`, `"10.000"`.
-- 📊 **Dashboard Financeiro em Tempo Real**: Indicadores de saldo, receitas, despesas, resumo por categoria e gráfico interativo.
-- 🏷️ **Gestão Completa de Categorias e Transações**: Filtros por data, categoria, paginação e cadastro manual.
-- 📱 **Interface 100% Responsiva**: Sidebar colapsável em telas desktop e menu gaveta com desfoque (*backdrop blur*) em dispositivos móveis, com a tipografia oficial **Inter**.
+-  **Extrator Inteligente de Valores**: Processamento de valores monetários complexos como `"1.000"`, `"1.500,50"`, `"2 mil"`, `"mil reais"`, `"10.000"`.
+-  **Dashboard Financeiro em Tempo Real**: Indicadores de saldo, receitas, despesas, resumo por categoria e gráfico interativo.
+-  **Gestão Completa de Categorias e Transações**: Filtros por data, categoria, paginação e cadastro manual.
+-  **Interface 100% Responsiva**: Sidebar colapsável em telas desktop e menu gaveta com desfoque (*backdrop blur*) em dispositivos móveis, com a tipografia oficial **Inter**.
 - 📑 **Documentação Interativa Swagger / OpenAPI 3.0**: Teste visual de todos os endpoints RESTful.
 
 ---
 
-### 🛠️ Tecnologias Utilizadas
+###  Tecnologias Utilizadas
 
 #### Backend (API Rest)
 - **Linguagem**: Java 21 (JDK 21)
@@ -53,7 +53,7 @@ Com o assistente de voz, o usuário pode gravar áudios ou enviar arquivos como 
 
 ---
 
-### 🗄️ Arquitetura do Sistema
+###  Arquitetura do Sistema
 
 ```mermaid
 flowchart TD
@@ -99,7 +99,7 @@ flowchart TD
     style MY fill:#431407,stroke:#ea580c,color:#f1f5f9
 ```
 
-#### 🔄 Fluxo de Comunicação
+####  Fluxo de Comunicação
 
 | # | Origem | Destino | Protocolo | Descrição |
 |---|---|---|---|---|
@@ -112,7 +112,7 @@ flowchart TD
 
 ---
 
-### 📂 Como Executar o Projeto
+###  Como Executar o Projeto
 
 #### Pré-requisitos
 - [Docker & Docker Compose](https://www.docker.com/)
@@ -155,7 +155,7 @@ npm run dev
 
 ---
 
-### 🔗 Endpoints da API (Swagger / OpenAPI)
+###  Endpoints da API (Swagger / OpenAPI)
 
 | Método | Endpoint | Descrição |
 |---|---|---|
@@ -173,28 +173,28 @@ npm run dev
 
 ## 🇺🇸 English
 
-### 📌 About the Project
+###  About the Project
 **Budgeting AI** is a complete personal financial management and control system powered by artificial intelligence and voice commands. The project connects a **robust Java 21 Spring Boot Backend** with a **modern Next.js 16 Frontend**, integrated with a local AI engine (**Faster-Whisper**) for real-time voice transcription and intent interpretation.
 
 Through the voice assistant, users can record audio or upload files such as *"Spent 1500 dollars on groceries"* or *"What is my balance?"*. The system automatically detects amounts (even spoken in full words or formatted with thousands separators), categorizes the entry, persists it in the MySQL database, and synthesizes text and speech responses.
 
 ---
 
-### 🚀 Key Features
-- 🎤 **Voice Financial Assistant**: Local audio recording and transcription using Faster-Whisper.
-- 🧠 **AI Intent Interpretation**:
+###  Key Features
+-  **Voice Financial Assistant**: Local audio recording and transcription using Faster-Whisper.
+-  **AI Intent Interpretation**:
   - Automatic transaction creation via voice commands.
   - Real-time balance and financial status inquiries.
   - Category filtering and listing through natural speech.
-- 🔢 **Intelligent Amount Extractor**: Parses complex monetary values such as `"1.000"`, `"1,500.50"`, `"2 thousand"`, `"10,000"`.
-- 📊 **Real-Time Financial Dashboard**: Balance metrics, income vs expenses, category summary, and interactive charts.
-- 🏷️ **Complete Category & Transaction Management**: Filter by date, category, pagination, and manual entry.
-- 📱 **100% Responsive UI**: Collapsible sidebar on desktop and backdrop-blurred drawer menu on mobile, built with official **Inter** typography.
-- 📑 **Interactive Swagger / OpenAPI 3.0**: Visual REST API testing interface.
+-  **Intelligent Amount Extractor**: Parses complex monetary values such as `"1.000"`, `"1,500.50"`, `"2 thousand"`, `"10,000"`.
+-  **Real-Time Financial Dashboard**: Balance metrics, income vs expenses, category summary, and interactive charts.
+-  **Complete Category & Transaction Management**: Filter by date, category, pagination, and manual entry.
+-  **100% Responsive UI**: Collapsible sidebar on desktop and backdrop-blurred drawer menu on mobile, built with official **Inter** typography.
+-  **Interactive Swagger / OpenAPI 3.0**: Visual REST API testing interface.
 
 ---
 
-### 🛠️ Tech Stack
+###  Tech Stack
 
 #### Backend
 - **Language**: Java 21
