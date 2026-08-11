@@ -56,16 +56,59 @@ Com o assistente de voz, o usuário pode gravar áudios ou enviar arquivos como 
 ### 🗄️ Arquitetura do Sistema
 
 ```mermaid
-graph TD;
-    User([Usuário / Web App]) -->|Navegador / Microfone| Frontend[Next.js 16 Frontend]
-    Frontend -->|HTTP / Multipart Form Data| Backend[Spring Boot 4.0 Backend]
-    Backend -->|REST / Audio File| Whisper[Faster-Whisper Container - Porta 8000]
-    Whisper -->|Texto Transcrito| Backend
-    Backend -->|Processamento & Regex AI| Engine[VoiceAssistantService]
-    Engine -->|JPA Entity / SQL| MySQL[(MySQL Database - Porta 3307)]
-    Engine -->|VoiceResponse JSON| Frontend
-    Frontend -->|Síntese de Voz| User
+flowchart TD
+    subgraph BROWSER["🌐 Usuário / Browser"]
+        FE["⚛️ Next.js 16 Frontend\n──────────────────────\nDashboard · Transações · Categorias\nRelatórios · Assistente de Voz\n──────────────────────\nTypeScript · Tailwind CSS 4 · TanStack Query v5\nAxios · MediaRecorder API · Inter Font\n:3000"]
+    end
+
+    subgraph DOCKER["🐳 Docker Compose"]
+        subgraph BE["🍃 Spring Boot 4.0 — Java 21"]
+            TC["TransactionController\n/transactions"]
+            VC["VoiceController\n/transactions/voice"]
+            VAS["VoiceAssistantService\nParser de Intenções + Regex em camadas"]
+            TC --> VAS
+            VC --> VAS
+        end
+
+        subgraph AI["🤖 Faster-Whisper Server"]
+            WH["fedirz/faster-whisper-server:latest-cpu\nModelo: faster-whisper-small\nOpenAI-compatible API\n:8000"]
+        end
+
+        subgraph DB["🗄️ MySQL 8.0"]
+            MY["tabela: transactions\nSpring Data JPA · Hibernate 7\nHikariCP Connection Pool\n:3307"]
+        end
+    end
+
+    FE -->|"① HTTP REST / JSON"| TC
+    FE -->|"② POST multipart/form-data — áudio .webm"| VC
+    VC -->|"③ POST /v1/audio/transcriptions"| WH
+    WH -.->|"④ Texto transcrito { text }"| VC
+    VAS -->|"⑤ JPA / SQL INSERT"| MY
+    BE -.->|"⑥ VoiceResponse JSON + síntese de voz"| FE
+
+    style BROWSER fill:#1e293b,stroke:#3b82f6,color:#f1f5f9
+    style DOCKER fill:#111827,stroke:#374151,stroke-dasharray:6 4,color:#9ca3af
+    style BE fill:#052e16,stroke:#16a34a,color:#f1f5f9
+    style AI fill:#1e1b4b,stroke:#7c3aed,color:#f1f5f9
+    style DB fill:#431407,stroke:#ea580c,color:#f1f5f9
+    style FE fill:#0f172a,stroke:#3b82f6,color:#f1f5f9
+    style TC fill:#064e3b,stroke:#059669,color:#f1f5f9
+    style VC fill:#064e3b,stroke:#059669,color:#f1f5f9
+    style VAS fill:#064e3b,stroke:#10b981,color:#f1f5f9
+    style WH fill:#2e1065,stroke:#7c3aed,color:#f1f5f9
+    style MY fill:#431407,stroke:#ea580c,color:#f1f5f9
 ```
+
+#### 🔄 Fluxo de Comunicação
+
+| # | Origem | Destino | Protocolo | Descrição |
+|---|---|---|---|---|
+| ① | Frontend | TransactionController | `HTTP REST / JSON` | CRUD de transações, listagem e summary |
+| ② | Frontend | VoiceController | `POST multipart/form-data` | Envio do arquivo `.webm` de áudio gravado |
+| ③ | VoiceController | Faster-Whisper | `HTTP POST /v1/audio/transcriptions` | Transcrição do áudio em texto |
+| ④ | Faster-Whisper | VoiceController | `JSON { text: "..." }` | Texto transcrito retornado |
+| ⑤ | VoiceAssistantService | MySQL | `JPA / SQL INSERT` | Persistência da transação criada por voz |
+| ⑥ | Spring Boot API | Frontend | `JSON VoiceResponse` | Resultado + texto para síntese de voz no browser |
 
 ---
 
