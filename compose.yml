@@ -1,0 +1,51 @@
+services:
+
+  # ─── Banco de Dados MySQL ────────────────────────────────────────────────
+  # Mesmo banco do projeto original DIO.
+  # Porta 3307 no host para não conflitar com MySQL local (porta padrão 3306).
+  database:
+    image: mysql:8.0
+    container_name: budgeting-mysql
+    environment:
+      MYSQL_DATABASE: transaction
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+    ports:
+      - "3307:3306"
+    volumes:
+      - transaction_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "app", "-papp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Faster-Whisper Server (Transcrição de áudio local) ─────────────────
+  # Imagem compatível com a API da OpenAI (/v1/audio/transcriptions).
+  # Usamos a versão CPU — funciona em qualquer máquina, sem GPU NVIDIA.
+  # Se você tiver GPU NVIDIA: troque a imagem por latest-cuda
+  #
+  # Modelos disponíveis (dentro do container):
+  #   tiny, base, small, medium, large-v2, large-v3
+  # Quanto maior o modelo, mais preciso mas mais lento.
+  # Para português, "small" já tem boa precisão.
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    container_name: budgeting-whisper
+    ports:
+      - "8000:8000"
+    environment:
+      # Modelo a ser carregado. Opções: tiny, base, small, medium, large-v2
+      WHISPER__MODEL: Systran/faster-whisper-small
+      # Idioma padrão (opcional — se não informado, o modelo detecta automaticamente)
+      WHISPER__LANGUAGE: pt
+    volumes:
+      # Cache dos modelos HuggingFace: evita re-download a cada restart
+      - whisper_cache:/root/.cache/huggingface
+
+volumes:
+  transaction_data:
+    driver: local
+  whisper_cache:
+    driver: local

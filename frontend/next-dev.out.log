@@ -1,0 +1,10 @@
+
+> frontend@0.1.0 dev
+> next dev --port 3001
+
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.15.22:3001
+✓ Ready in 472ms
+✓ Running next.config.ts took 49ms
+[?25h
