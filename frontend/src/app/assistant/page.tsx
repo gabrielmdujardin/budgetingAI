@@ -220,7 +220,7 @@ export default function AssistantPage() {
   };
 
   /* ── Send Text Command ── */
-  const handleSendText = (overrideText?: string) => {
+  const handleSendText = async (overrideText?: string) => {
     const text = (overrideText || textInput).trim();
     if (!text) return;
     setTextInput('');
@@ -235,11 +235,24 @@ export default function AssistantPage() {
     setIsProcessing(true);
     setOrbState('thinking');
 
-    setTimeout(() => {
-      pushAssistantMessage('No momento aceito comandos de voz via áudio. Use o botão de microfone para interagir com a IA!');
+    try {
+      const result: VoiceResponse = await transactionService.sendTextCommand(text);
+      setOrbState('speaking');
+      pushAssistantMessage(result.message, result);
+      speakText(result.message);
+
+      setTimeout(() => setOrbState('idle'), 3000);
+
+      if (result.action === 'CREATE_TRANSACTION') {
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        queryClient.invalidateQueries({ queryKey: ['summary'] });
+      }
+    } catch {
+      pushAssistantMessage('Não consegui processar seu comando por texto. Verifique a conexão com a API.');
       setOrbState('idle');
+    } finally {
       setIsProcessing(false);
-    }, 800);
+    }
   };
 
   /* ── File Upload Handler ── */

@@ -29,4 +29,9 @@ export const transactionService = {
     const response = await api.post<VoiceResponse>('/transactions/voice', formData);
     return response.data;
   },
+
+  async sendTextCommand(text: string): Promise<VoiceResponse> {
+    const response = await api.post<VoiceResponse>('/transactions/text', { text });
+    return response.data;
+  },
 };

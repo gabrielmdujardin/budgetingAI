@@ -80,4 +80,34 @@ public class VoiceController {
         VoiceResponse response = voiceAssistantService.processVoiceCommand(audio);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping(value = "/text", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Processar comando financeiro por texto",
+            description = "Recebe uma frase em texto enviada pelo usuário, interpreta a intenção, extrai o valor e a categoria e executa a transação ou consulta correspondente."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Comando em texto processado com sucesso",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = VoiceResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Comando em texto ausente ou inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    public ResponseEntity<VoiceResponse> processTextCommand(
+            @jakarta.validation.Valid @RequestBody dio.budgeting.dto.request.TextCommandRequest request
+    ) {
+        VoiceResponse response = voiceAssistantService.interpretTextAndExecute(request.getText());
+        return ResponseEntity.ok(response);
+    }
 }

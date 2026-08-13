@@ -21,6 +21,8 @@ interface ChatBubbleProps {
   onSpeak: (text: string) => void;
 }
 
+import { isIncomeCategory } from '@/utils/finance';
+
 function AssistantBubble({ message, onSpeak }: ChatBubbleProps) {
   const vr = message.voiceResponse;
 
@@ -80,7 +82,9 @@ function AssistantBubble({ message, onSpeak }: ChatBubbleProps) {
             </div>
             <div className="flex items-center justify-between gap-2">
               <span className="font-semibold text-gray-800 truncate">{vr.transaction.description}</span>
-              <span className="font-extrabold text-gray-900 shrink-0">{formatCurrency(vr.transaction.amount)}</span>
+              <span className={isIncomeCategory(vr.transaction.category) ? 'font-extrabold text-emerald-600 shrink-0' : 'font-extrabold text-red-500 shrink-0'}>
+                {isIncomeCategory(vr.transaction.category) ? '+' : '-'} {formatCurrency(vr.transaction.amount)}
+              </span>
             </div>
             <div className="flex items-center gap-2 mt-2">
               <CategoryBadge category={vr.transaction.category} />
@@ -101,15 +105,20 @@ function AssistantBubble({ message, onSpeak }: ChatBubbleProps) {
               <ListChecks className="w-4 h-4 text-emerald-600" /> Lancamentos
             </div>
             <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-              {vr.transactions.map((t: Transaction) => (
-                <div key={t.id} className="flex items-center justify-between gap-3 py-1.5 border-b border-gray-50 last:border-0">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{t.description}</p>
-                    <p className="text-xs text-gray-400">{formatDate(t.createdAt)}</p>
+              {vr.transactions.map((t: Transaction) => {
+                const isIncome = isIncomeCategory(t.category);
+                return (
+                  <div key={t.id} className="flex items-center justify-between gap-3 py-1.5 border-b border-gray-50 last:border-0">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{t.description}</p>
+                      <p className="text-xs text-gray-400">{formatDate(t.createdAt)}</p>
+                    </div>
+                    <span className={isIncome ? 'text-sm font-extrabold text-emerald-600 shrink-0' : 'text-sm font-extrabold text-red-500 shrink-0'}>
+                      {isIncome ? '+' : '-'} {formatCurrency(t.amount)}
+                    </span>
                   </div>
-                  <span className="text-sm font-extrabold text-red-500 shrink-0">{formatCurrency(t.amount)}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         )}
