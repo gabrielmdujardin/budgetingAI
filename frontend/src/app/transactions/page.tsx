@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CreditCard, PlusCircle } from 'lucide-react';
+import { CreditCard, Plus } from 'lucide-react';
 import { TransactionFormModal } from '@/components/forms/TransactionFormModal';
 import { FilterBar } from '@/components/transactions/FilterBar';
 import { TransactionTable } from '@/components/transactions/TransactionTable';
@@ -67,19 +67,16 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col justify-between gap-4 border-b border-neutral-200 pb-5 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#222222]">Transacoes</h1>
-          <p className="mt-1 text-base font-medium text-[#666666]">Controle suas entradas e saidas</p>
-        </div>
-
+      {/* Header — Clean single title */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Transações</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-[#009C3B] px-4 py-2.5 text-sm font-extrabold text-white transition-colors hover:bg-[#006B2B]"
+          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700"
         >
-          <PlusCircle className="h-4 w-4" /> Nova transacao
+          <Plus className="h-4 w-4" /> Nova transação
         </button>
-      </section>
+      </div>
 
       <FilterBar
         searchTerm={searchTerm}
@@ -104,9 +101,9 @@ export default function TransactionsPage() {
         onClear={clearFilters}
       />
 
-      <section className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm">
+      <section className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
         {isLoading ? (
-          <LoadingState label="Carregando transacoes..." />
+          <LoadingState label="Carregando transações..." />
         ) : pageTransactions.length ? (
           <>
             <TransactionTable
@@ -115,34 +112,34 @@ export default function TransactionsPage() {
               isDeleting={deleteMutation.isPending}
               showActions
             />
-            <div className="flex items-center justify-between border-t border-neutral-200 px-5 py-4 text-sm text-[#666666]">
+            <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4 text-xs font-semibold text-gray-400">
               <span>
-                Pagina {currentPage} de {totalPages}
+                Página {currentPage} de {totalPages}
               </span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                   disabled={currentPage === 1}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 font-bold disabled:opacity-40"
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 font-semibold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-40"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 font-bold disabled:opacity-40"
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 font-semibold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-40"
                 >
-                  Proxima
+                  Próxima
                 </button>
               </div>
             </div>
           </>
         ) : (
-          <div className="p-5">
+          <div className="p-6">
             <EmptyState
               icon={<CreditCard className="h-5 w-5" />}
-              title="Nenhuma transacao encontrada"
-              description="Ajuste os filtros ou cadastre uma nova transacao."
+              title="Nenhuma transação encontrada"
+              description="Ajuste os filtros ou cadastre uma nova transação."
             />
           </div>
         )}

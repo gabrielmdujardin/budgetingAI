@@ -14,7 +14,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { BarChart3, PieChart as PieChartIcon, Tags } from 'lucide-react';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { transactionService } from '@/services/transactionService';
@@ -41,7 +40,7 @@ export default function SummaryPage() {
         category,
         name: CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.label ?? category,
         value: amount,
-        color: CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.color ?? '#666666',
+        color: CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.color ?? '#6B7280',
       }))
       .sort((a, b) => b.value - a.value);
   }, [summary]);
@@ -65,48 +64,41 @@ export default function SummaryPage() {
       }));
   }, [transactions]);
 
-  const total = summary?.total ?? 0;
+  const total = summary?.totalExpenses ?? 0;
   const isLoading = loadingSummary || loadingTransactions;
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col justify-between gap-4 border-b border-neutral-200 pb-5 sm:flex-row sm:items-end">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#222222]">Relatorios</h1>
-          <p className="mt-1 text-base font-medium text-[#666666]">Graficos e distribuicao dos lancamentos</p>
-        </div>
-        <div className="rounded-md border border-neutral-200 bg-white px-4 py-3 text-right shadow-sm">
-          <p className="text-xs font-bold uppercase text-[#666666]">Total no periodo</p>
-          <p className="text-2xl font-extrabold text-[#D93025]">{formatCurrency(total)}</p>
-        </div>
-      </section>
+      {/* Header — Clean single title */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Relatórios</h1>
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Total: <strong className="text-gray-900 font-extrabold">{formatCurrency(total)}</strong>
+        </span>
+      </div>
 
       {isLoading ? (
-        <LoadingState label="Carregando relatorios..." />
+        <LoadingState label="Carregando relatórios..." />
       ) : !categoryData.length ? (
         <EmptyState
-          icon={<PieChartIcon className="h-5 w-5" />}
-          title="Ainda nao ha dados para exibir"
-          description="Cadastre uma transacao manualmente ou pelo assistente financeiro."
+          title="Nenhum dado disponível"
+          description="Cadastre transações para visualizar os relatórios."
         />
       ) : (
         <>
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="rounded-md border border-neutral-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center gap-2">
-                <PieChartIcon className="h-5 w-5 text-[#009C3B]" />
-                <h2 className="font-extrabold text-[#222222]">Gastos por categoria</h2>
-              </div>
-              <div className="h-80">
+            <div className="rounded-2xl border border-gray-100 bg-white p-6">
+              <h2 className="text-base font-bold tracking-tight text-gray-900 mb-6">Gastos por Categoria</h2>
+              <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={categoryData}
                       dataKey="value"
                       nameKey="name"
-                      innerRadius={70}
-                      outerRadius={110}
-                      paddingAngle={2}
+                      innerRadius={65}
+                      outerRadius={100}
+                      paddingAngle={3}
                     >
                       {categoryData.map((entry) => (
                         <Cell key={entry.category} fill={entry.color} />
@@ -114,59 +106,53 @@ export default function SummaryPage() {
                     </Pie>
                     <Tooltip
                       formatter={(value) => formatCurrency(Number(value))}
-                      contentStyle={{ background: '#FFFFFF', border: '1px solid #DADADA', borderRadius: 6 }}
+                      contentStyle={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="rounded-md border border-neutral-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-[#009C3B]" />
-                <h2 className="font-extrabold text-[#222222]">Ultimos dias com lancamentos</h2>
-              </div>
-              <div className="h-80">
+            <div className="rounded-2xl border border-gray-100 bg-white p-6">
+              <h2 className="text-base font-bold tracking-tight text-gray-900 mb-6">Volume por Período</h2>
+              <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dailyData}>
-                    <CartesianGrid stroke="#E5E5E5" vertical={false} />
-                    <XAxis dataKey="label" stroke="#666666" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#666666" fontSize={12} tickFormatter={(value) => `R$ ${Number(value) / 100}`} />
+                    <CartesianGrid stroke="#F1F5F9" vertical={false} />
+                    <XAxis dataKey="label" stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `R$ ${Number(value) / 100}`} />
                     <Tooltip
                       formatter={(value) => formatCurrency(Number(value))}
                       labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ''}
-                      contentStyle={{ background: '#FFFFFF', border: '1px solid #DADADA', borderRadius: 6 }}
+                      contentStyle={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
                     />
-                    <Bar dataKey="amount" fill="#009C3B" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="amount" fill="#10B981" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </section>
 
-          <section className="rounded-md border border-neutral-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-2">
-              <Tags className="h-5 w-5 text-[#009C3B]" />
-              <h2 className="font-extrabold text-[#222222]">Ranking de categorias</h2>
-            </div>
-            <div className="space-y-3">
+          <section className="rounded-2xl border border-gray-100 bg-white p-6">
+            <h2 className="text-base font-bold tracking-tight text-gray-900 mb-6">Distribuição de Gastos</h2>
+            <div className="space-y-4">
               {categoryData.map((item) => {
                 const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
 
                 return (
-                  <div key={item.category} className="border-b border-neutral-100 pb-3 last:border-b-0 last:pb-0">
-                    <div className="flex items-center justify-between gap-4 text-sm">
-                      <div className="flex items-center gap-2 font-bold text-[#222222]">
-                        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                  <div key={item.category} className="border-b border-gray-50 pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 font-semibold text-gray-900">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                         {item.name}
                       </div>
                       <div className="text-right">
-                        <p className="font-mono font-extrabold text-[#222222]">{formatCurrency(item.value)}</p>
-                        <p className="text-xs font-semibold text-[#666666]">{percent}% do total</p>
+                        <span className="font-extrabold text-gray-900">{formatCurrency(item.value)}</span>
+                        <span className="ml-2 text-xs font-semibold text-gray-400">({percent}%)</span>
                       </div>
                     </div>
-                    <div className="mt-2 h-2 rounded-full bg-neutral-100">
-                      <div className="h-2 rounded-full" style={{ width: `${percent}%`, backgroundColor: item.color }} />
+                    <div className="mt-2 h-1.5 rounded-full bg-gray-100">
+                      <div className="h-1.5 rounded-full" style={{ width: `${percent}%`, backgroundColor: item.color }} />
                     </div>
                   </div>
                 );

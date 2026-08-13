@@ -6,19 +6,17 @@ import {
   BarChart3,
   Bot,
   CreditCard,
-  Flag,
   LayoutDashboard,
-  Settings,
   Tags,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/transactions', label: 'Transacoes', icon: CreditCard },
+  { href: '/transactions', label: 'Transações', icon: CreditCard },
   { href: '/categories', label: 'Categorias', icon: Tags },
-  { href: '/summary', label: 'Relatorios', icon: BarChart3 },
-  { href: '/assistant', label: 'Assistente financeiro', icon: Bot },
+  { href: '/summary', label: 'Relatórios', icon: BarChart3 },
+  { href: '/assistant', label: 'Assistente', icon: Bot },
 ];
 
 export function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean }) {
@@ -27,16 +25,11 @@ export function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean }) {
   return (
     <aside
       className={clsx(
-        'hidden h-full shrink-0 overflow-y-auto border-r border-neutral-200 bg-white transition-all duration-300 md:block',
-        isCollapsed ? 'w-16' : 'w-64'
+        'hidden h-full shrink-0 overflow-y-auto border-r border-gray-200/60 bg-white transition-all duration-300 md:block',
+        isCollapsed ? 'w-16' : 'w-60'
       )}
     >
       <div className="p-3">
-        {!isCollapsed && (
-          <div className="px-3 pb-3 pt-1 text-xs font-bold uppercase text-[#666666]">
-            Menu principal
-          </div>
-        )}
         <nav className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -48,14 +41,14 @@ export function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean }) {
                 href={item.href}
                 title={isCollapsed ? item.label : undefined}
                 className={clsx(
-                  'flex items-center border-l-4 py-2.5 text-sm font-semibold transition-colors',
-                  isCollapsed ? 'justify-center px-2' : 'gap-3 px-3',
+                  'flex items-center rounded-xl py-2.5 text-sm font-medium transition-all duration-150',
+                  isCollapsed ? 'justify-center px-2' : 'gap-3 px-3.5',
                   isActive
-                    ? 'border-[#009C3B] bg-[#009C3B]/10 text-[#006B2B]'
-                    : 'border-transparent text-[#555555] hover:bg-neutral-50 hover:text-[#222222]'
+                    ? 'bg-emerald-500/10 font-semibold text-emerald-700'
+                    : 'text-gray-500 hover:bg-gray-100/80 hover:text-gray-900'
                 )}
               >
-                <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-[#009C3B]' : 'text-[#777777]')} />
+                <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-emerald-600' : 'text-gray-400')} />
                 {!isCollapsed && <span>{item.label}</span>}
               </Link>
             );

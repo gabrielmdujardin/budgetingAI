@@ -25,52 +25,51 @@ export function TransactionTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[720px] text-left text-sm">
-        <thead className="bg-neutral-50 text-xs font-bold uppercase text-[#666666]">
+      <table className="w-full min-w-[640px] text-left text-sm">
+        <thead className="bg-gray-50/50 text-xs font-semibold uppercase tracking-wider text-gray-400">
           <tr>
-            <th className="border-b border-neutral-200 px-5 py-3">Data</th>
-            <th className="border-b border-neutral-200 px-5 py-3">Descricao</th>
-            <th className="border-b border-neutral-200 px-5 py-3">Categoria</th>
-            <th className="border-b border-neutral-200 px-5 py-3">Tipo</th>
-            <th className="border-b border-neutral-200 px-5 py-3 text-right">Valor</th>
-            {showActions && <th className="border-b border-neutral-200 px-5 py-3 text-center">Acoes</th>}
+            <th className="border-b border-gray-100 px-6 py-3">Data</th>
+            <th className="border-b border-gray-100 px-6 py-3">Descrição</th>
+            <th className="border-b border-gray-100 px-6 py-3">Categoria</th>
+            <th className="border-b border-gray-100 px-6 py-3">Tipo</th>
+            <th className="border-b border-gray-100 px-6 py-3 text-right">Valor</th>
+            {showActions && <th className="border-b border-gray-100 px-6 py-3 text-center">Ações</th>}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-100 bg-white">
+        <tbody className="divide-y divide-gray-100 bg-white">
           {visibleTransactions.map((transaction) => {
             const tone = getTransactionTone(transaction);
             const isIncome = tone === 'income';
 
             return (
-              <tr key={transaction.id} className="transition-colors hover:bg-neutral-50">
-                <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-[#666666]">
+              <tr key={transaction.id} className="transition-colors hover:bg-gray-50/60">
+                <td className="whitespace-nowrap px-6 py-4 text-xs font-medium text-gray-400">
                   {formatDate(transaction.createdAt)}
                 </td>
-                <td className="px-5 py-4 font-bold text-[#222222]">{transaction.description}</td>
-                <td className="whitespace-nowrap px-5 py-4">
+                <td className="px-6 py-4 font-semibold text-gray-900">{transaction.description}</td>
+                <td className="whitespace-nowrap px-6 py-4">
                   <CategoryBadge category={transaction.category} />
                 </td>
-                <td className="px-5 py-4">
+                <td className="px-6 py-4">
                   <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                      isIncome ? 'bg-[#0B8F3C]/10 text-[#0B8F3C]' : 'bg-[#D93025]/10 text-[#D93025]'
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      isIncome ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
                     }`}
                   >
                     {isIncome ? 'Receita' : 'Despesa'}
                   </span>
                 </td>
-                <td className={`px-5 py-4 text-right font-mono font-extrabold ${isIncome ? 'text-[#0B8F3C]' : 'text-[#D93025]'}`}>
-                  {isIncome ? '+' : '-'}
-                  {formatCurrency(transaction.amount)}
+                <td className={`px-6 py-4 text-right font-extrabold tracking-tight ${isIncome ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {isIncome ? '+' : '-'} {formatCurrency(transaction.amount)}
                 </td>
                 {showActions && (
-                  <td className="px-5 py-4 text-center">
+                  <td className="px-6 py-4 text-center">
                     <button
                       onClick={() => onDelete?.(transaction.id)}
                       disabled={isDeleting}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#666666] transition-colors hover:bg-[#D93025]/10 hover:text-[#D93025] disabled:opacity-50"
-                      title="Excluir transacao"
-                      aria-label="Excluir transacao"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                      title="Excluir transação"
+                      aria-label="Excluir transação"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

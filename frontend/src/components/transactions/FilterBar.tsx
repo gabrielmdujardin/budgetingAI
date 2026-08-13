@@ -31,23 +31,23 @@ export function FilterBar({
   onClear,
 }: FilterBarProps) {
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm">
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_190px_150px_150px_150px_auto]">
+    <div className="rounded-2xl border border-gray-100 bg-white p-4">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_180px_140px_140px_140px_auto]">
         <label className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-[#666666]" />
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Buscar por descricao"
-            className="w-full rounded-md border border-neutral-300 bg-white py-2.5 pl-9 pr-3 text-sm text-[#222222] outline-none transition-colors focus:border-[#009C3B]"
+            placeholder="Buscar descrição..."
+            className="w-full rounded-xl border border-gray-200 bg-gray-50/50 py-2 pl-9 pr-3 text-sm text-gray-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
           />
         </label>
 
         <select
           value={selectedCategory}
           onChange={(event) => onCategoryChange(event.target.value)}
-          className="rounded-md border border-neutral-300 bg-white px-3 py-2.5 text-sm text-[#222222] outline-none focus:border-[#009C3B]"
+          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:bg-white"
         >
           <option value="">Categoria</option>
           {Object.entries(CATEGORY_LABELS).map(([key, item]) => (
@@ -60,7 +60,7 @@ export function FilterBar({
         <select
           value={selectedType}
           onChange={(event) => onTypeChange(event.target.value)}
-          className="rounded-md border border-neutral-300 bg-white px-3 py-2.5 text-sm text-[#222222] outline-none focus:border-[#009C3B]"
+          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:bg-white"
         >
           <option value="">Tipo</option>
           <option value="income">Receita</option>
@@ -71,23 +71,23 @@ export function FilterBar({
           type="date"
           value={startDate}
           onChange={(event) => onStartDateChange(event.target.value)}
-          className="rounded-md border border-neutral-300 bg-white px-3 py-2.5 text-sm text-[#222222] outline-none focus:border-[#009C3B]"
+          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:bg-white"
         />
 
         <input
           type="date"
           value={endDate}
           onChange={(event) => onEndDateChange(event.target.value)}
-          className="rounded-md border border-neutral-300 bg-white px-3 py-2.5 text-sm text-[#222222] outline-none focus:border-[#009C3B]"
+          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:bg-white"
         />
 
         <button
           onClick={onClear}
-          className="rounded-md border border-neutral-300 px-4 py-2.5 text-sm font-bold text-[#444444] transition-colors hover:bg-neutral-50"
+          className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
           Limpar
         </button>
       </div>
-    </section>
+    </div>
   );
 }

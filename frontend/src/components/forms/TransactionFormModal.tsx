@@ -4,16 +4,16 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, PlusCircle, Loader2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { Category, CATEGORY_LABELS } from '@/types/transaction';
 import { transactionService } from '@/services/transactionService';
 
 const categoryValues = Object.keys(CATEGORY_LABELS) as [Category, ...Category[]];
 
 const transactionSchema = z.object({
-  description: z.string().trim().min(1, 'A descricao e obrigatoria'),
+  description: z.string().trim().min(1, 'A descrição é obrigatória'),
   amount: z.number().positive('O valor deve ser positivo'),
-  category: z.enum(categoryValues, { message: 'A categoria e obrigatoria' }),
+  category: z.enum(categoryValues, { message: 'A categoria é obrigatória' }),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -63,87 +63,85 @@ export function TransactionFormModal({ isOpen, onClose, onSuccess }: Transaction
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Erro ao criar transacao:', err);
-      setSubmitError('Nao foi possivel salvar a transacao. Verifique se o backend esta rodando.');
+      console.error('Erro ao criar transação:', err);
+      setSubmitError('Não foi possível salvar a transação. Verifique a conexão com a API.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-      <div className="relative w-full max-w-lg rounded-md border border-neutral-200 bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
-          <h2 className="flex items-center gap-2 text-xl font-extrabold text-[#222222]">
-            <PlusCircle className="h-5 w-5 text-[#009C3B]" /> Cadastrar transacao
-          </h2>
-          <button onClick={handleClose} className="rounded-md p-1 text-[#666666] transition-colors hover:bg-neutral-100 hover:text-[#222222]" aria-label="Fechar">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-lg rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl">
+        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900">Nova Transação</h2>
+          <button onClick={handleClose} className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="Fechar">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase text-[#666666]">Descricao</label>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Descrição</label>
             <input
               type="text"
               {...register('description')}
-              placeholder="Ex: Compra no supermercado"
-              className="w-full rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm text-[#222222] outline-none transition-colors focus:border-[#009C3B]"
+              placeholder="Ex: Mercado"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
             />
-            {errors.description && <p className="text-xs font-semibold text-[#D93025]">{errors.description.message}</p>}
+            {errors.description && <p className="text-xs font-semibold text-rose-600">{errors.description.message}</p>}
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase text-[#666666]">Valor (R$)</label>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Valor (R$)</label>
             <input
               type="number"
               step="0.01"
               min="0"
               {...register('amount', { valueAsNumber: true })}
               placeholder="0,00"
-              className="w-full rounded-md border border-neutral-300 bg-white px-4 py-2.5 font-mono text-sm text-[#222222] outline-none transition-colors focus:border-[#009C3B]"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm font-extrabold text-gray-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
             />
-            {errors.amount && <p className="text-xs font-semibold text-[#D93025]">{errors.amount.message}</p>}
+            {errors.amount && <p className="text-xs font-semibold text-rose-600">{errors.amount.message}</p>}
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase text-[#666666]">Categoria</label>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Categoria</label>
             <select
               {...register('category')}
-              className="w-full rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm text-[#222222] outline-none transition-colors focus:border-[#009C3B]"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
             >
-              <option value="">Selecione uma categoria...</option>
+              <option value="">Selecione...</option>
               {Object.entries(CATEGORY_LABELS).map(([key, item]) => (
                 <option key={key} value={key}>
                   {item.label}
                 </option>
               ))}
             </select>
-            {errors.category && <p className="text-xs font-semibold text-[#D93025]">{errors.category.message}</p>}
+            {errors.category && <p className="text-xs font-semibold text-rose-600">{errors.category.message}</p>}
           </div>
 
           {submitError && (
-            <div className="rounded-md border border-[#D93025]/30 bg-[#D93025]/10 px-3 py-2 text-sm font-semibold text-[#D93025]">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">
               {submitError}
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-md border border-neutral-300 px-4 py-2.5 text-sm font-bold text-[#444444] transition-colors hover:bg-neutral-50"
+              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 rounded-md bg-[#009C3B] px-5 py-2.5 text-sm font-extrabold text-white transition-colors hover:bg-[#006B2B] disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar transacao
+              Salvar
             </button>
           </div>
         </form>

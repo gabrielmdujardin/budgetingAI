@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertTriangle, CreditCard, Flag, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ActivityList } from '@/components/dashboard/ActivityList';
 import { FinancialChart } from '@/components/dashboard/FinancialChart';
@@ -30,82 +30,71 @@ export default function DashboardPage() {
   const balance = summary?.total ?? (totalIncome - totalExpenses);
   const topCategoryEntry = summary?.categories
     ? Object.entries(summary.categories)
-        .filter(([cat]) => !['SALARY', 'INVESTMENTS'].includes(cat)) // nao exibir receitas como "maior gasto"
+        .filter(([cat]) => !['SALARY', 'INVESTMENTS'].includes(cat))
         .sort((a, b) => b[1] - a[1])[0]
     : undefined;
   const topCategory = topCategoryEntry
     ? CATEGORY_LABELS[topCategoryEntry[0] as keyof typeof CATEGORY_LABELS]?.label
     : 'Sem registros';
 
-
   return (
-    <div className="space-y-6">
-      <section className="border-b border-neutral-200 pb-5">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[#222222]">Dashboard</h1>
-        <p className="mt-1 text-base font-medium text-[#666666]">Veja como estao suas financas</p>
-      </section>
+    <div className="space-y-8">
+      {/* Header — Clean single title */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+      </div>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Primary Metrics Grid */}
+      <section className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <DashboardCard
-          title="Saldo atual"
-          value={loadingTransactions ? 'Carregando...' : formatCurrency(balance)}
-          detail="Receitas menos despesas registradas"
-          icon={<Wallet className="h-5 w-5" />}
+          title="Saldo Atual"
+          value={loadingTransactions ? '...' : formatCurrency(balance)}
           tone={balance >= 0 ? 'income' : 'expense'}
         />
         <DashboardCard
-          title="Receitas no mes"
-          value={loadingTransactions ? 'Carregando...' : formatCurrency(totalIncome)}
-          detail="+12% em relacao ao mes anterior"
-          icon={<TrendingUp className="h-5 w-5" />}
+          title="Receitas no Mês"
+          value={loadingTransactions ? '...' : formatCurrency(totalIncome)}
           tone="income"
         />
         <DashboardCard
-          title="Despesas no mes"
-          value={loadingSummary ? 'Carregando...' : formatCurrency(totalExpenses)}
-          detail="-5% em relacao ao mes anterior"
-          icon={<TrendingDown className="h-5 w-5" />}
+          title="Despesas no Mês"
+          value={loadingSummary ? '...' : formatCurrency(totalExpenses)}
           tone="expense"
         />
       </section>
 
+      {/* Main Charts Section */}
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_360px]">
-        {loadingTransactions ? <LoadingState label="Carregando grafico..." /> : <FinancialChart transactions={transactions} />}
+        {loadingTransactions ? <LoadingState label="Carregando gráfico..." /> : <FinancialChart transactions={transactions} />}
         <div className="space-y-6">
           <DashboardCard
-            title="Categoria que mais gastou"
-            value={loadingSummary ? 'Carregando...' : topCategory}
-            detail={topCategoryEntry ? formatCurrency(topCategoryEntry[1]) : 'Aguardando lancamentos'}
-            icon={<AlertTriangle className="h-5 w-5" />}
+            title="Maior Categoria de Gasto"
+            value={loadingSummary ? '...' : topCategory}
             tone="warning"
           />
           <ActivityList transactions={transactions} />
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between gap-4 border-b border-neutral-200 px-5 py-4">
-          <div>
-            <h2 className="text-lg font-extrabold text-[#222222]">Transacoes recentes</h2>
-            <p className="text-sm text-[#666666]">Ultimos movimentos cadastrados</p>
-          </div>
-          <Link href="/transactions" className="text-sm font-extrabold text-[#006B2B] hover:text-[#009C3B]">
+      {/* Recent Transactions Section */}
+      <section className="rounded-2xl border border-gray-100 bg-white p-6">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <h2 className="text-base font-bold tracking-tight text-gray-900">Transações Recentes</h2>
+          <Link href="/transactions" className="text-xs font-bold uppercase tracking-wider text-emerald-600 hover:text-emerald-700">
             Ver todas →
           </Link>
         </div>
 
         {loadingTransactions ? (
-          <LoadingState label="Carregando transacoes..." />
+          <LoadingState label="Carregando transações..." />
         ) : transactions.length ? (
           <TransactionTable transactions={transactions} limit={5} />
         ) : (
-          <div className="p-5">
-            <EmptyState
-              icon={<CreditCard className="h-5 w-5" />}
-              title="Nenhuma transacao encontrada"
-              description="Registre uma transacao manualmente ou usando comandos de voz."
-            />
-          </div>
+          <EmptyState
+            icon={<CreditCard className="h-5 w-5" />}
+            title="Nenhuma transação cadastrada"
+            description="Cadastre transações manualmente ou pelo assistente."
+          />
         )}
       </section>
     </div>

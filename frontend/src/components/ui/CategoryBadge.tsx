@@ -4,7 +4,7 @@ export function CategoryBadge({ category }: { category: Category; compact?: bool
   const item = CATEGORY_LABELS[category] ?? CATEGORY_LABELS.OTHER;
 
   return (
-    <span className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-xs font-bold text-[#444444]">
+    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
       {item.label}
     </span>
   );

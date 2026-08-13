@@ -36,21 +36,15 @@ export function FinancialChart({ transactions }: { transactions: Transaction[] }
     .slice(-8);
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-        <div>
-          <h2 className="text-lg font-extrabold text-[#222222]">Receitas x Despesas</h2>
-          <p className="text-sm text-[#666666]">Ultimos lancamentos por periodo</p>
-        </div>
-        <span className="text-xs font-bold uppercase text-[#666666]">Periodo recente</span>
-      </div>
+    <section className="rounded-2xl border border-gray-100 bg-white p-6">
+      <h2 className="text-base font-bold tracking-tight text-gray-900 mb-6">Receitas x Despesas</h2>
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <CartesianGrid stroke="#E5E5E5" vertical={false} />
-            <XAxis dataKey="label" stroke="#666666" fontSize={12} tickLine={false} axisLine={false} />
+            <CartesianGrid stroke="#F1F5F9" vertical={false} />
+            <XAxis dataKey="label" stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
             <YAxis
-              stroke="#666666"
+              stroke="#94A3B8"
               fontSize={12}
               tickLine={false}
               axisLine={false}
@@ -59,11 +53,11 @@ export function FinancialChart({ transactions }: { transactions: Transaction[] }
             <Tooltip
               formatter={(value) => formatCurrency(Number(value))}
               labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ''}
-              contentStyle={{ background: '#FFFFFF', border: '1px solid #DADADA', borderRadius: 6, color: '#222222' }}
+              contentStyle={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
             />
-            <Legend />
-            <Bar dataKey="receitas" name="Receitas" fill="#0B8F3C" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="despesas" name="Despesas" fill="#D93025" radius={[4, 4, 0, 0]} />
+            <Legend wrapperStyle={{ paddingTop: 16 }} />
+            <Bar dataKey="receitas" name="Receitas" fill="#10B981" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="despesas" name="Despesas" fill="#F43F5E" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
