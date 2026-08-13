@@ -27,11 +27,11 @@ export function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean }) {
   return (
     <aside
       className={clsx(
-        'hidden min-h-[calc(100vh-3.5rem)] shrink-0 border-r border-neutral-200 bg-white transition-all duration-300 md:block',
+        'hidden h-full shrink-0 overflow-y-auto border-r border-neutral-200 bg-white transition-all duration-300 md:block',
         isCollapsed ? 'w-16' : 'w-64'
       )}
     >
-      <div className="sticky top-14 p-3">
+      <div className="p-3">
         {!isCollapsed && (
           <div className="px-3 pb-3 pt-1 text-xs font-bold uppercase text-[#666666]">
             Menu principal
