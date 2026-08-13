@@ -57,23 +57,34 @@ public class TransactionService {
 
         List<Object[]> rawSummaries = repository.sumAmountByCategoryAndPeriod(startOfMonth, endOfMonth);
 
+        // Categorias que representam receita (nao sao gastos)
+        java.util.Set<Category> incomeCategories = java.util.Set.of(Category.SALARY, Category.INVESTMENTS);
+
         Map<Category, Long> categoryMap = new EnumMap<>(Category.class);
-        long grandTotal = 0L;
+        long totalIncome = 0L;
+        long totalExpenses = 0L;
 
         for (Object[] row : rawSummaries) {
             Category cat = (Category) row[0];
             Long sum = (Long) row[1];
             if (cat != null && sum != null) {
                 categoryMap.put(cat, sum);
-                grandTotal += sum;
+                if (incomeCategories.contains(cat)) {
+                    totalIncome += sum;
+                } else {
+                    totalExpenses += sum;
+                }
             }
         }
 
         return SummaryResponse.builder()
-                .total(grandTotal)
+                .total(totalIncome - totalExpenses)   // saldo = receitas - despesas
+                .totalIncome(totalIncome)
+                .totalExpenses(totalExpenses)
                 .categories(categoryMap)
                 .build();
     }
+
 
     @Transactional
     public void deleteTransaction(Long id) {

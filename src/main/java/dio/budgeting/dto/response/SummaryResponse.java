@@ -16,9 +16,16 @@ import java.util.Map;
 @Schema(description = "Resumo acumulado dos gastos por categoria e total")
 public class SummaryResponse {
 
-    @Schema(description = "Soma total dos gastos em centavos", example = "150000")
+    @Schema(description = "Soma total de todas as transacoes (receitas + despesas) em centavos", example = "150000")
     private Long total;
+
+    @Schema(description = "Total apenas das receitas (SALARY, INVESTMENTS) em centavos", example = "500000")
+    private Long totalIncome;
+
+    @Schema(description = "Total apenas das despesas (todas as categorias exceto SALARY e INVESTMENTS) em centavos", example = "150000")
+    private Long totalExpenses;
 
     @Schema(description = "Mapeamento das categorias com seus respectivos totais em centavos")
     private Map<Category, Long> categories;
 }
+

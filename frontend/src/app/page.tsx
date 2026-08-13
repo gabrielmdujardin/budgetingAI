@@ -25,15 +25,18 @@ export default function DashboardPage() {
     queryFn: () => transactionService.getTransactions(),
   });
 
-  const totalIncome = sumIncome(transactions);
-  const totalExpenses = summary?.total ?? sumExpenses(transactions);
-  const balance = totalIncome - totalExpenses;
+  const totalIncome = summary?.totalIncome ?? sumIncome(transactions);
+  const totalExpenses = summary?.totalExpenses ?? sumExpenses(transactions);
+  const balance = summary?.total ?? (totalIncome - totalExpenses);
   const topCategoryEntry = summary?.categories
-    ? Object.entries(summary.categories).sort((a, b) => b[1] - a[1])[0]
+    ? Object.entries(summary.categories)
+        .filter(([cat]) => !['SALARY', 'INVESTMENTS'].includes(cat)) // nao exibir receitas como "maior gasto"
+        .sort((a, b) => b[1] - a[1])[0]
     : undefined;
   const topCategory = topCategoryEntry
     ? CATEGORY_LABELS[topCategoryEntry[0] as keyof typeof CATEGORY_LABELS]?.label
     : 'Sem registros';
+
 
   return (
     <div className="space-y-6">

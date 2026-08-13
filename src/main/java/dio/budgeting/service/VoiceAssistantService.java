@@ -110,19 +110,22 @@ public class VoiceAssistantService {
         return buildCreateTransactionResponse(text, lowerText);
     }
 
+    private static final java.util.Set<Category> INCOME_CATEGORIES =
+            java.util.Set.of(Category.SALARY, Category.INVESTMENTS);
+
     private VoiceResponse buildBalanceResponse(String transcription) {
         List<TransactionResponse> transactions = transactionService.getTransactions(null, null, null);
         long income = transactions.stream()
-                .filter(transaction -> transaction.getCategory() == Category.SALARY)
+                .filter(t -> INCOME_CATEGORIES.contains(t.getCategory()))
                 .mapToLong(TransactionResponse::getAmount)
                 .sum();
         long expenses = transactions.stream()
-                .filter(transaction -> transaction.getCategory() != Category.SALARY)
+                .filter(t -> !INCOME_CATEGORIES.contains(t.getCategory()))
                 .mapToLong(TransactionResponse::getAmount)
                 .sum();
         long balance = openingBalanceCents + income - expenses;
 
-        String message = "Seu saldo estimado é " + formatCurrency(balance)
+        String message = "Seu saldo estimado e " + formatCurrency(balance)
                 + ". Considerei saldo inicial de " + formatCurrency(openingBalanceCents)
                 + ", receitas de " + formatCurrency(income)
                 + " e gastos de " + formatCurrency(expenses) + ".";
@@ -139,7 +142,7 @@ public class VoiceAssistantService {
 
     private VoiceResponse buildTransactionsResponse(String transcription, Category category) {
         List<TransactionResponse> transactions = transactionService.getTransactions(category, null, null).stream()
-                .filter(transaction -> transaction.getCategory() != Category.SALARY)
+                .filter(t -> !INCOME_CATEGORIES.contains(t.getCategory()))
                 .sorted(Comparator.comparing(TransactionResponse::getCreatedAt).reversed())
                 .toList();
 

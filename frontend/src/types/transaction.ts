@@ -27,9 +27,15 @@ export interface TransactionRequest {
 }
 
 export interface SummaryResponse {
+  /** Saldo = receitas - despesas */
   total: number;
+  /** Somente SALARY + INVESTMENTS */
+  totalIncome: number;
+  /** Somente categorias de despesa (exclui SALARY e INVESTMENTS) */
+  totalExpenses: number;
   categories: Partial<Record<Category, number>>;
 }
+
 
 export type VoiceAction =
   | 'CREATE_TRANSACTION'
