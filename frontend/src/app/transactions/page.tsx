@@ -69,10 +69,10 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       {/* Header — Clean single title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Transações</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-text">Transações</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-background shadow-sm transition-all hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" /> Nova transação
         </button>
@@ -101,7 +101,7 @@ export default function TransactionsPage() {
         onClear={clearFilters}
       />
 
-      <section className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
+      <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden shadow-xl">
         {isLoading ? (
           <LoadingState label="Carregando transações..." />
         ) : pageTransactions.length ? (
@@ -112,7 +112,7 @@ export default function TransactionsPage() {
               isDeleting={deleteMutation.isPending}
               showActions
             />
-            <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4 text-xs font-semibold text-gray-400">
+            <div className="flex items-center justify-between border-t border-border px-6 py-4 text-xs font-semibold text-text-secondary">
               <span>
                 Página {currentPage} de {totalPages}
               </span>
@@ -120,14 +120,14 @@ export default function TransactionsPage() {
                 <button
                   onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                   disabled={currentPage === 1}
-                  className="rounded-lg border border-gray-200 px-3 py-1.5 font-semibold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-40"
+                  className="rounded-lg border border-border px-3 py-1.5 font-semibold text-text-secondary transition-colors hover:bg-surface hover:text-text disabled:opacity-40"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded-lg border border-gray-200 px-3 py-1.5 font-semibold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-40"
+                  className="rounded-lg border border-border px-3 py-1.5 font-semibold text-text-secondary transition-colors hover:bg-surface hover:text-text disabled:opacity-40"
                 >
                   Próxima
                 </button>

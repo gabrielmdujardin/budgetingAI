@@ -34,7 +34,7 @@ function TypingIndicator() {
       <div className="shrink-0 mb-1">
         <Orb state="thinking" size="sm" />
       </div>
-      <div className="bg-white/90 backdrop-blur-sm border border-white/60 rounded-2xl rounded-bl-sm px-4 py-3 shadow-md">
+      <div className="bg-surface border border-border rounded-2xl rounded-bl-sm px-4 py-3 shadow-md">
         <div className="flex gap-1.5 items-center h-4">
           {[0, 1, 2].map((i) => (
             <motion.span
@@ -196,9 +196,12 @@ export default function AssistantPage() {
       return prev;
     });
 
+    const displayText = typeof result.message === 'object' && result.message?.text ? result.message.text : String(result.message || '');
+    const speechTextToSpeak = typeof result.message === 'object' && result.message?.speech ? result.message.speech : displayText;
+
     setOrbState('speaking');
-    pushAssistantMessage(result.message, result);
-    speakText(result.message);
+    pushAssistantMessage(displayText, result);
+    speakText(speechTextToSpeak);
 
     setTimeout(() => setOrbState('idle'), 3000);
 
@@ -237,9 +240,12 @@ export default function AssistantPage() {
 
     try {
       const result: VoiceResponse = await transactionService.sendTextCommand(text);
+      const displayText = typeof result.message === 'object' && result.message?.text ? result.message.text : String(result.message || '');
+      const speechTextToSpeak = typeof result.message === 'object' && result.message?.speech ? result.message.speech : displayText;
+
       setOrbState('speaking');
-      pushAssistantMessage(result.message, result);
-      speakText(result.message);
+      pushAssistantMessage(displayText, result);
+      speakText(speechTextToSpeak);
 
       setTimeout(() => setOrbState('idle'), 3000);
 

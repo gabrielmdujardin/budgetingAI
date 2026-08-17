@@ -47,13 +47,29 @@ export type VoiceAction =
   | 'INVALID_AUDIO';
 
 export interface VoiceResponse {
-  action: VoiceAction;
-  message: string;
-  transcription: string;
+  action?: VoiceAction;
+  message: {
+    text: string;
+    speech: string;
+  } | string;
+  cards?: Array<{
+    type: string;
+    title: string;
+    value: number;
+  }>;
+  transactions?: Array<{
+    id: string;
+    type: 'income' | 'expense';
+    description: string;
+    amount: number;
+    category: string;
+    date: string;
+    source: string;
+  }> | Transaction[];
+  transcription?: string;
   balance?: number;
   summary?: SummaryResponse;
   transaction?: Transaction;
-  transactions?: Transaction[];
 }
 
 export const CATEGORY_LABELS: Record<Category, { label: string; icon: string; color: string }> = {

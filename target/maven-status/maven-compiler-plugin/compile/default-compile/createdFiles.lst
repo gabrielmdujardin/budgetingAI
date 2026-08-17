@@ -1,6 +1,0 @@
-dio\budgeting\BudgetingApplication.class
-dio\budgeting\controller\VoiceController.class
-dio\budgeting\service\VoiceAssistantService$2.class
-dio\budgeting\controller\TransactionController.class
-dio\budgeting\config\SwaggerConfig.class
-dio\budgeting\config\JpaConfig.class

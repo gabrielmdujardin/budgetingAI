@@ -30,13 +30,13 @@ export function ActivityList({ transactions }: { transactions: Transaction[] }) 
   ];
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-6">
-      <h2 className="text-base font-bold tracking-tight text-gray-900 mb-4">Resumo das Atividades</h2>
+    <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 shadow-xl">
+      <h2 className="text-base font-bold tracking-tight text-text mb-4">Resumo das Atividades</h2>
       <div className="space-y-4">
         {items.map((item) => (
-          <div key={item.label} className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0">
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">{item.label}</span>
-            <span className="text-sm font-extrabold text-gray-900">{item.val}</span>
+          <div key={item.label} className="flex justify-between items-center border-b border-border pb-3 last:border-0 last:pb-0">
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">{item.label}</span>
+            <span className="text-sm font-extrabold text-text">{item.val}</span>
           </div>
         ))}
       </div>

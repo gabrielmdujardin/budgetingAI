@@ -21,19 +21,22 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       />
 
       {/* Sliding Drawer */}
-      <aside className="fixed inset-y-0 left-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-white shadow-2xl transition-transform">
-        <div className="flex h-14 items-center justify-between border-b border-[#006B2B] bg-[#009C3B] px-4 text-white">
-          <span className="text-lg font-extrabold tracking-tight">Budgeting</span>
-          <button
+      <aside className="fixed inset-y-0 left-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-surface border-r border-border shadow-2xl transition-transform">
+        <div className="flex h-16 items-center justify-between border-b border-border bg-transparent px-4 text-text">
+          <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
+            <span className="h-2 w-2 rounded-full bg-primary" />
+            Budgeting
+          </span>
+            <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white transition-colors hover:bg-white/15"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface-hover hover:text-text"
             aria-label="Fechar menu"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-4 pb-2 text-xs font-bold uppercase text-[#666666]">
+        <div className="p-4 pb-2 text-xs font-bold uppercase text-text-secondary">
           Menu principal
         </div>
         <nav className="space-y-1 px-3">
@@ -47,13 +50,13 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 href={item.href}
                 onClick={onClose}
                 className={clsx(
-                  'flex items-center gap-3 rounded-md border-l-4 px-3 py-3 text-sm font-semibold transition-colors',
+                  'flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-colors',
                   isActive
-                    ? 'border-[#009C3B] bg-[#009C3B]/10 text-[#006B2B]'
-                    : 'border-transparent text-[#555555] hover:bg-neutral-50 hover:text-[#222222]'
+                    ? 'bg-primary/10 font-semibold text-primary'
+                    : 'text-text-secondary hover:bg-surface-hover hover:text-text'
                 )}
               >
-                <Icon className={clsx('h-5 w-5', isActive ? 'text-[#009C3B]' : 'text-[#777777]')} />
+                <Icon className={clsx('h-5 w-5', isActive ? 'text-primary' : 'text-text-secondary')} />
                 <span>{item.label}</span>
               </Link>
             );

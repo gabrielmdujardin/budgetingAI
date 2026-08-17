@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#F5F5F5]">
+    <div className="flex h-screen flex-col overflow-hidden text-white" style={{ background: 'linear-gradient(135deg, #071A0D 0%, #0A1F12 40%, #0C2217 100%)' }}>
       <Navbar onMenuClick={handleMenuClick} />
       <div className="mx-auto flex w-full max-w-[1440px] flex-1 min-h-0">
         <Sidebar isCollapsed={isDesktopCollapsed} />

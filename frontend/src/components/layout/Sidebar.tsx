@@ -25,7 +25,7 @@ export function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean }) {
   return (
     <aside
       className={clsx(
-        'hidden h-full shrink-0 overflow-y-auto border-r border-gray-200/60 bg-white transition-all duration-300 md:block',
+        'hidden h-full shrink-0 overflow-y-auto border-r border-white/10 bg-white/5 backdrop-blur-md transition-all duration-300 md:block',
         isCollapsed ? 'w-16' : 'w-60'
       )}
     >
@@ -44,11 +44,11 @@ export function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean }) {
                   'flex items-center rounded-xl py-2.5 text-sm font-medium transition-all duration-150',
                   isCollapsed ? 'justify-center px-2' : 'gap-3 px-3.5',
                   isActive
-                    ? 'bg-emerald-500/10 font-semibold text-emerald-700'
-                    : 'text-gray-500 hover:bg-gray-100/80 hover:text-gray-900'
+                    ? 'bg-primary/10 font-semibold text-primary'
+                    : 'text-text-secondary hover:bg-white/10 hover:text-white'
                 )}
               >
-                <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-emerald-600' : 'text-gray-400')} />
+                <Icon className={clsx('h-4 w-4 shrink-0', isActive ? 'text-primary' : 'text-text-secondary')} />
                 {!isCollapsed && <span>{item.label}</span>}
               </Link>
             );

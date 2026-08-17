@@ -40,13 +40,13 @@ function AssistantBubble({ message, onSpeak }: ChatBubbleProps) {
 
       <div className="space-y-2">
         {/* Main bubble */}
-        <div className="relative rounded-2xl rounded-bl-sm bg-white/90 backdrop-blur-sm border border-white/60 shadow-lg px-4 py-3 text-sm text-gray-800 leading-relaxed">
+        <div className="relative rounded-2xl rounded-bl-sm bg-surface border border-border shadow-lg px-4 py-3 text-sm text-text leading-relaxed">
           <p>{message.text}</p>
-          <div className="flex items-center justify-between gap-3 mt-2 pt-2 border-t border-gray-100">
-            <span className="text-xs text-gray-400">{message.timestamp}</span>
+          <div className="flex items-center justify-between gap-3 mt-2 pt-2 border-t border-border">
+            <span className="text-xs text-text-secondary">{message.timestamp}</span>
             <button
               onClick={() => onSpeak(message.text)}
-              className="text-emerald-600 hover:text-emerald-700 transition-colors"
+              className="text-primary hover:text-primary/80 transition-colors"
               title="Ouvir resposta"
             >
               <Volume2 className="w-3.5 h-3.5" />
@@ -75,20 +75,20 @@ function AssistantBubble({ message, onSpeak }: ChatBubbleProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="rounded-2xl bg-white/90 backdrop-blur-sm border border-emerald-200 shadow-lg p-4 text-sm"
+            className="rounded-2xl bg-surface border border-primary/30 shadow-lg p-4 text-sm"
           >
-            <div className="flex items-center gap-1.5 text-emerald-700 font-bold mb-2 text-xs">
+            <div className="flex items-center gap-1.5 text-primary font-bold mb-2 text-xs">
               <CheckCircle2 className="w-4 h-4" /> Transacao registrada
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-gray-800 truncate">{vr.transaction.description}</span>
-              <span className={isIncomeCategory(vr.transaction.category) ? 'font-extrabold text-emerald-600 shrink-0' : 'font-extrabold text-red-500 shrink-0'}>
+              <span className="font-semibold text-text truncate">{vr.transaction.description}</span>
+              <span className={isIncomeCategory(vr.transaction.category) ? 'font-extrabold text-primary shrink-0' : 'font-extrabold text-rose-400 shrink-0'}>
                 {isIncomeCategory(vr.transaction.category) ? '+' : '-'} {formatCurrency(vr.transaction.amount)}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-2">
               <CategoryBadge category={vr.transaction.category} />
-              <span className="text-xs text-gray-400">{formatDate(vr.transaction.createdAt)}</span>
+              <span className="text-xs text-text-secondary">{formatDate(vr.transaction.createdAt)}</span>
             </div>
           </motion.div>
         )}
@@ -99,21 +99,22 @@ function AssistantBubble({ message, onSpeak }: ChatBubbleProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="rounded-2xl bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg p-4"
+            className="rounded-2xl bg-surface border border-border shadow-lg p-4"
           >
-            <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase mb-3">
-              <ListChecks className="w-4 h-4 text-emerald-600" /> Lancamentos
+            <div className="flex items-center gap-2 text-xs font-bold text-text-secondary uppercase mb-3">
+              <ListChecks className="w-4 h-4 text-primary" /> Lancamentos
             </div>
             <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-              {vr.transactions.map((t: Transaction) => {
-                const isIncome = isIncomeCategory(t.category);
+              {vr.transactions.map((t: any) => {
+                const isIncome = t.type === 'income' || isIncomeCategory(t.category);
+                const dateStr = t.date || t.createdAt;
                 return (
-                  <div key={t.id} className="flex items-center justify-between gap-3 py-1.5 border-b border-gray-50 last:border-0">
+                  <div key={t.id} className="flex items-center justify-between gap-3 py-1.5 border-b border-border last:border-0">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">{t.description}</p>
-                      <p className="text-xs text-gray-400">{formatDate(t.createdAt)}</p>
+                      <p className="text-sm font-semibold text-text truncate">{t.description}</p>
+                      {dateStr && <p className="text-xs text-text-secondary">{formatDate(dateStr)}</p>}
                     </div>
-                    <span className={isIncome ? 'text-sm font-extrabold text-emerald-600 shrink-0' : 'text-sm font-extrabold text-red-500 shrink-0'}>
+                    <span className={isIncome ? 'text-sm font-extrabold text-primary shrink-0' : 'text-sm font-extrabold text-rose-400 shrink-0'}>
                       {isIncome ? '+' : '-'} {formatCurrency(t.amount)}
                     </span>
                   </div>

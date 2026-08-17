@@ -41,7 +41,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       {/* Header — Clean single title */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-text">Dashboard</h1>
       </div>
 
       {/* Primary Metrics Grid */}
@@ -77,10 +77,10 @@ export default function DashboardPage() {
       </section>
 
       {/* Recent Transactions Section */}
-      <section className="rounded-2xl border border-gray-100 bg-white p-6">
+      <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 shadow-xl">
         <div className="flex items-center justify-between gap-4 mb-4">
-          <h2 className="text-base font-bold tracking-tight text-gray-900">Transações Recentes</h2>
-          <Link href="/transactions" className="text-xs font-bold uppercase tracking-wider text-emerald-600 hover:text-emerald-700">
+          <h2 className="text-base font-bold tracking-tight text-text">Transações Recentes</h2>
+          <Link href="/transactions" className="text-xs font-bold uppercase tracking-wider text-primary hover:text-primary/80">
             Ver todas →
           </Link>
         </div>

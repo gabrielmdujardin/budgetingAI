@@ -5,6 +5,9 @@ import dio.budgeting.dto.request.TransactionRequest;
 import dio.budgeting.dto.response.SummaryResponse;
 import dio.budgeting.dto.response.TransactionResponse;
 import dio.budgeting.dto.response.VoiceResponse;
+import dio.budgeting.dto.response.VoiceResponse.CardPayload;
+import dio.budgeting.dto.response.VoiceResponse.MessagePayload;
+import dio.budgeting.dto.response.VoiceResponse.StructuredTransactionPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,11 +21,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,7 +39,7 @@ public class VoiceAssistantService {
 
     private static final Locale PT_BR = Locale.of("pt", "BR");
     private static final NumberFormat BRL = NumberFormat.getCurrencyInstance(PT_BR);
-    private static final Pattern MONEY_PATTERN = Pattern.compile("(\\d+(?:[\\.,]\\d{1,2})?)");
+    private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final TransactionService transactionService;
 
@@ -43,12 +49,19 @@ public class VoiceAssistantService {
     @Value("${app.finances.opening-balance-cents:500000}")
     private long openingBalanceCents;
 
+    private static final Set<Category> INCOME_CATEGORIES = Set.of(Category.SALARY, Category.INVESTMENTS);
+
     public VoiceResponse processVoiceCommand(MultipartFile audioFile) {
         if (audioFile == null || audioFile.isEmpty()) {
             return VoiceResponse.builder()
                     .action("INVALID_AUDIO")
-                    .message("Não recebi um arquivo de áudio válido. Grave novamente ou envie outro arquivo.")
                     .transcription("")
+                    .message(MessagePayload.builder()
+                            .text("Não recebi um arquivo de áudio válido. Por favor, tente gravar novamente.")
+                            .speech("Não recebi um arquivo de áudio válido. Por favor tente gravar novamente.")
+                            .build())
+                    .cards(List.of())
+                    .transactions(List.of())
                     .build();
         }
 
@@ -58,8 +71,13 @@ public class VoiceAssistantService {
         if (transcription == null || transcription.isBlank()) {
             return VoiceResponse.builder()
                     .action("TRANSCRIPTION_FAILED")
-                    .message("Recebi seu áudio, mas não consegui transcrever com segurança. Verifique se o Faster-Whisper está rodando e tente gravar novamente.")
                     .transcription("")
+                    .message(MessagePayload.builder()
+                            .text("Não consegui compreender o áudio gravado. Pode tentar novamente?")
+                            .speech("Não consegui compreender o áudio gravado. Pode tentar novamente?")
+                            .build())
+                    .cards(List.of())
+                    .transactions(List.of())
                     .build();
         }
 
@@ -103,6 +121,10 @@ public class VoiceAssistantService {
             return buildBalanceResponse(text);
         }
 
+        if (isIncomeIntent(lowerText)) {
+            return buildIncomeResponse(text);
+        }
+
         if (isListIntent(lowerText) || isExpenseQuestion(lowerText)) {
             return buildTransactionsResponse(text, detectCategory(lowerText));
         }
@@ -110,33 +132,85 @@ public class VoiceAssistantService {
         return buildCreateTransactionResponse(text, lowerText);
     }
 
-    private static final java.util.Set<Category> INCOME_CATEGORIES =
-            java.util.Set.of(Category.SALARY, Category.INVESTMENTS);
+    private boolean isIncomeIntent(String text) {
+        return text.contains("receita") || text.contains("receitas") || text.contains("quanto recebi") || text.contains("meus ganhos");
+    }
 
     private VoiceResponse buildBalanceResponse(String transcription) {
-        List<TransactionResponse> transactions = transactionService.getTransactions(null, null, null);
-        long income = transactions.stream()
+        List<TransactionResponse> allTx = transactionService.getTransactions(null, null, null);
+        long incomeCents = allTx.stream()
                 .filter(t -> INCOME_CATEGORIES.contains(t.getCategory()))
                 .mapToLong(TransactionResponse::getAmount)
                 .sum();
-        long expenses = transactions.stream()
+        long expensesCents = allTx.stream()
                 .filter(t -> !INCOME_CATEGORIES.contains(t.getCategory()))
                 .mapToLong(TransactionResponse::getAmount)
                 .sum();
-        long balance = openingBalanceCents + income - expenses;
+        long balanceCents = openingBalanceCents + incomeCents - expensesCents;
 
-        String message = "Seu saldo estimado e " + formatCurrency(balance)
-                + ". Considerei saldo inicial de " + formatCurrency(openingBalanceCents)
-                + ", receitas de " + formatCurrency(income)
-                + " e gastos de " + formatCurrency(expenses) + ".";
+        double balanceVal = centsToDouble(balanceCents);
+
+        String chatText = "Seu saldo estimado é **" + formatCurrency(balanceCents) + "**.";
+        String speechText = "Seu saldo estimado é de " + formatMoneyToSpeech(balanceCents) + ".";
+
+        CardPayload balanceCard = CardPayload.builder()
+                .type("balance")
+                .title("Saldo estimado")
+                .value(balanceVal)
+                .build();
+
+        List<StructuredTransactionPayload> structuredTxs = allTx.stream()
+                .sorted(Comparator.comparing(TransactionResponse::getCreatedAt).reversed())
+                .limit(8)
+                .map(this::toStructuredPayload)
+                .toList();
 
         return VoiceResponse.builder()
                 .action("BALANCE")
-                .message(message)
                 .transcription(transcription)
-                .balance(balance)
-                .summary(buildSummary(transactions))
-                .transactions(limit(transactions, 8))
+                .balance(balanceCents)
+                .summary(buildSummary(allTx))
+                .transactions(allTx) // retrocompatível
+                .message(MessagePayload.builder()
+                        .text(chatText)
+                        .speech(speechText)
+                        .build())
+                .cards(List.of(balanceCard))
+                .transactions(structuredTxs)
+                .build();
+    }
+
+    private VoiceResponse buildIncomeResponse(String transcription) {
+        List<TransactionResponse> incomeTxs = transactionService.getTransactions(null, null, null).stream()
+                .filter(t -> INCOME_CATEGORIES.contains(t.getCategory()))
+                .sorted(Comparator.comparing(TransactionResponse::getCreatedAt).reversed())
+                .toList();
+
+        long totalIncomeCents = incomeTxs.stream().mapToLong(TransactionResponse::getAmount).sum();
+
+        String chatText = "Você recebeu **" + formatCurrency(totalIncomeCents) + "** em receitas.";
+        String speechText = "Você recebeu " + formatMoneyToSpeech(totalIncomeCents) + " em receitas.";
+
+        CardPayload incomeCard = CardPayload.builder()
+                .type("income")
+                .title("Total de receitas")
+                .value(centsToDouble(totalIncomeCents))
+                .build();
+
+        List<StructuredTransactionPayload> structuredTxs = incomeTxs.stream()
+                .map(this::toStructuredPayload)
+                .toList();
+
+        return VoiceResponse.builder()
+                .action("LIST_INCOME")
+                .transcription(transcription)
+                .summary(buildSummary(incomeTxs))
+                .message(MessagePayload.builder()
+                        .text(chatText)
+                        .speech(speechText)
+                        .build())
+                .cards(List.of(incomeCard))
+                .transactions(structuredTxs)
                 .build();
     }
 
@@ -146,24 +220,43 @@ public class VoiceAssistantService {
                 .sorted(Comparator.comparing(TransactionResponse::getCreatedAt).reversed())
                 .toList();
 
-        long total = transactions.stream().mapToLong(TransactionResponse::getAmount).sum();
-        List<TransactionResponse> limited = limit(transactions, 8);
+        long totalCents = transactions.stream().mapToLong(TransactionResponse::getAmount).sum();
+        int count = transactions.size();
 
-        String scope = category != null ? " em " + categoryLabel(category) : "";
-        String message;
+        String scopeText = category != null ? " em " + categoryLabelReadable(category) : "";
+        String scopeSpeech = category != null ? " em " + categoryLabelReadable(category) : "";
+
+        String chatText;
+        String speechText;
+
         if (transactions.isEmpty()) {
-            message = "Não encontrei gastos" + scope + " até agora.";
+            chatText = "Não encontrei **gastos**" + scopeText + ".";
+            speechText = "Não encontrei gastos" + scopeSpeech + " até o momento.";
         } else {
-            message = "Encontrei " + transactions.size() + " gasto(s)" + scope
-                    + ", totalizando " + formatCurrency(total) + ". " + summarizeTransactions(limited);
+            chatText = "Encontrei **" + count + " " + (count == 1 ? "gasto" : "gastos") + "**" + scopeText + ", totalizando **" + formatCurrency(totalCents) + "**.";
+            speechText = buildExpensesSpeechNarrative(count, totalCents, transactions);
         }
+
+        CardPayload summaryCard = CardPayload.builder()
+                .type("summary")
+                .title("Total de gastos")
+                .value(centsToDouble(totalCents))
+                .build();
+
+        List<StructuredTransactionPayload> structuredTxs = transactions.stream()
+                .map(this::toStructuredPayload)
+                .toList();
 
         return VoiceResponse.builder()
                 .action(category != null ? "LIST_TRANSACTIONS_BY_CATEGORY" : "LIST_TRANSACTIONS")
-                .message(message)
                 .transcription(transcription)
                 .summary(buildSummary(transactions))
-                .transactions(limited)
+                .message(MessagePayload.builder()
+                        .text(chatText)
+                        .speech(speechText)
+                        .build())
+                .cards(List.of(summaryCard))
+                .transactions(structuredTxs)
                 .build();
     }
 
@@ -172,28 +265,219 @@ public class VoiceAssistantService {
         if (amountCentavos == null || amountCentavos <= 0) {
             return VoiceResponse.builder()
                     .action("NEEDS_AMOUNT")
-                    .message("Entendi o comando, mas não encontrei um valor. Tente dizer algo como: gastei 45 reais no mercado.")
                     .transcription(transcription)
+                    .message(MessagePayload.builder()
+                            .text("Entendi seu comando, mas não identifiquei um valor. Por exemplo, diga: **\"Gastei R$ 45 no mercado\"**.")
+                            .speech("Entendi seu comando mas não identifiquei um valor. Por exemplo diga: gastei quarenta e cinco reais no mercado.")
+                            .build())
+                    .cards(List.of())
+                    .transactions(List.of())
                     .build();
         }
 
         Category category = detectCategory(lowerText);
+        Category finalCategory = category != null ? category : Category.OTHER;
+
         TransactionRequest request = TransactionRequest.builder()
                 .description(buildDescription(transcription))
                 .amount(amountCentavos)
-                .category(category != null ? category : Category.OTHER)
+                .category(finalCategory)
                 .build();
 
-        TransactionResponse transaction = transactionService.createTransaction(request);
+        TransactionResponse tx = transactionService.createTransaction(request);
+
+        boolean isIncome = INCOME_CATEGORIES.contains(finalCategory);
+        String actionType = isIncome ? "income" : "expense";
+        String verb = isIncome ? "Recebeu" : "Gastou";
+
+        String chatText = "Registrado! **" + tx.getDescription() + "** no valor de **" + formatCurrency(tx.getAmount()) + "** em **" + categoryLabelReadable(finalCategory) + "**.";
+        String speechText = (isIncome ? "Você recebeu " : "Você gastou ") + formatMoneyToSpeech(tx.getAmount()) + " no " + tx.getDescription().replace("Voz: ", "");
+
+        StructuredTransactionPayload structuredTx = toStructuredPayload(tx);
 
         return VoiceResponse.builder()
                 .action("CREATE_TRANSACTION")
-                .message("Registrei " + formatCurrency(transaction.getAmount()) + " em "
-                        + categoryLabel(transaction.getCategory()) + ". Descrição: " + transaction.getDescription() + ".")
                 .transcription(transcription)
-                .transaction(transaction)
+                .transaction(tx)
+                .message(MessagePayload.builder()
+                        .text(chatText)
+                        .speech(speechText)
+                        .build())
+                .cards(List.of(CardPayload.builder()
+                        .type(actionType)
+                        .title(verb + " registrado")
+                        .value(centsToDouble(tx.getAmount()))
+                        .build()))
+                .transactions(List.of(structuredTx))
                 .build();
     }
+
+    /* ── Converters and Formatters for Rules 2.1 to 2.11 ── */
+
+    private StructuredTransactionPayload toStructuredPayload(TransactionResponse tx) {
+        boolean isIncome = INCOME_CATEGORIES.contains(tx.getCategory());
+        String cleanDescription = tx.getDescription() != null && tx.getDescription().startsWith("Voz: ")
+                ? tx.getDescription().substring(5)
+                : tx.getDescription();
+
+        String formattedDate = tx.getCreatedAt() != null ? tx.getCreatedAt().format(ISO_FORMATTER) : LocalDateTime.now().format(ISO_FORMATTER);
+
+        return StructuredTransactionPayload.builder()
+                .id(String.valueOf(tx.getId()))
+                .type(isIncome ? "income" : "expense")
+                .description(cleanDescription)
+                .amount(centsToDouble(tx.getAmount()))
+                .category(categoryLabelReadable(tx.getCategory()))
+                .date(formattedDate)
+                .source("voice")
+                .build();
+    }
+
+    private String buildExpensesSpeechNarrative(int count, long totalCents, List<TransactionResponse> txs) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Encontrei ").append(numberToSpokenText(count)).append(count == 1 ? " gasto" : " gastos")
+          .append(", totalizando ").append(formatMoneyToSpeech(totalCents)).append(". ");
+
+        int limit = Math.min(txs.size(), 4);
+        if (limit > 0) {
+            List<String> items = new ArrayList<>();
+            for (int i = 0; i < limit; i++) {
+                TransactionResponse t = txs.get(i);
+                String desc = t.getDescription() != null ? t.getDescription().replace("Voz: ", "") : categoryLabelReadable(t.getCategory());
+                items.add(formatMoneyToSpeech(t.getAmount()) + " no " + desc);
+            }
+            sb.append("Você gastou ");
+            if (items.size() == 1) {
+                sb.append(items.get(0));
+            } else {
+                for (int i = 0; i < items.size(); i++) {
+                    if (i > 0 && i == items.size() - 1) {
+                        sb.append(" e ");
+                    } else if (i > 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(items.get(i));
+                }
+            }
+            sb.append(".");
+        }
+        return sb.toString();
+    }
+
+    private String formatMoneyToSpeech(long cents) {
+        if (cents == 0) return "zero reais";
+
+        long reais = cents / 100;
+        long centavos = cents % 100;
+
+        StringBuilder sb = new StringBuilder();
+
+        if (reais > 0) {
+            sb.append(numberToSpokenText(reais)).append(reais == 1 ? " real" : " reais");
+        }
+
+        if (centavos > 0) {
+            if (reais > 0) {
+                sb.append(" e ");
+            }
+            sb.append(numberToSpokenText(centavos)).append(centavos == 1 ? " centavo" : " centavos");
+        }
+
+        return sb.toString();
+    }
+
+    private String numberToSpokenText(long n) {
+        if (n < 0) return "menos " + numberToSpokenText(-n);
+        if (n == 0) return "zero";
+        if (n == 1) return "um";
+        if (n == 2) return "dois";
+        if (n == 3) return "três";
+        if (n == 4) return "quatro";
+        if (n == 5) return "cinco";
+        if (n == 6) return "seis";
+        if (n == 7) return "sete";
+        if (n == 8) return "oito";
+        if (n == 9) return "nove";
+        if (n == 10) return "dez";
+        if (n == 11) return "onze";
+        if (n == 12) return "doze";
+        if (n == 13) return "treze";
+        if (n == 14) return "quatorze";
+        if (n == 15) return "quinze";
+        if (n == 16) return "dezesseis";
+        if (n == 17) return "dezessete";
+        if (n == 18) return "dezoito";
+        if (n == 19) return "dezenove";
+        if (n == 20) return "vinte";
+        if (n == 30) return "trinta";
+        if (n == 40) return "quarenta";
+        if (n == 50) return "cinquenta";
+        if (n == 60) return "sessenta";
+        if (n == 70) return "setenta";
+        if (n == 80) return "oitenta";
+        if (n == 90) return "noventa";
+        if (n == 100) return "cem";
+        if (n == 200) return "duzentos";
+        if (n == 300) return "trezentos";
+        if (n == 400) return "quatrocentos";
+        if (n == 500) return "quinhentos";
+        if (n == 600) return "seiscentos";
+        if (n == 700) return "setecentos";
+        if (n == 800) return "oitocentos";
+        if (n == 900) return "novecentos";
+        if (n == 1000) return "mil";
+
+        if (n > 20 && n < 100) {
+            long tens = (n / 10) * 10;
+            long units = n % 10;
+            return numberToSpokenText(tens) + " e " + numberToSpokenText(units);
+        }
+
+        if (n > 100 && n < 1000) {
+            long hundreds = (n / 100) * 100;
+            long rest = n % 100;
+            String prefix = (hundreds == 100) ? "cento" : numberToSpokenText(hundreds);
+            return prefix + " e " + numberToSpokenText(rest);
+        }
+
+        if (n > 1000 && n < 1000000) {
+            long thousands = n / 1000;
+            long rest = n % 1000;
+            String prefix = (thousands == 1) ? "mil" : numberToSpokenText(thousands) + " mil";
+            if (rest == 0) return prefix;
+            if (rest < 100 || rest % 100 == 0) return prefix + " e " + numberToSpokenText(rest);
+            return prefix + " " + numberToSpokenText(rest);
+        }
+
+        return String.valueOf(n);
+    }
+
+    private double centsToDouble(long cents) {
+        return BigDecimal.valueOf(cents, 2).doubleValue();
+    }
+
+    private String categoryLabelReadable(Category category) {
+        if (category == null) return "Geral";
+        return switch (category) {
+            case FOOD -> "Alimentação";
+            case HEALTH -> "Saúde";
+            case TRANSPORT -> "Transporte";
+            case SHOPPING -> "Compras";
+            case LEISURE -> "Lazer";
+            case HOME -> "Casa";
+            case EDUCATION -> "Educação";
+            case SERVICES -> "Serviços";
+            case INVESTMENTS -> "Investimentos";
+            case SALARY -> "Receita";
+            case OTHER -> "Outros";
+        };
+    }
+
+    private String formatCurrency(long cents) {
+        return BRL.format(BigDecimal.valueOf(cents, 2));
+    }
+
+    /* ── Intent and Parsing Helpers ── */
 
     private boolean isBalanceIntent(String text) {
         return text.contains("saldo")
@@ -267,7 +551,6 @@ public class VoiceAssistantService {
 
         String lowerText = text.toLowerCase(PT_BR);
 
-        // 1. Check for "X mil" or "X,Y mil" (e.g. "2 mil", "1,5 mil", "1.5 mil")
         Matcher milMatcher = Pattern.compile("(\\d+(?:[\\.,]\\d{1,2})?)\\s*mil", Pattern.CASE_INSENSITIVE).matcher(lowerText);
         if (milMatcher.find()) {
             try {
@@ -277,7 +560,6 @@ public class VoiceAssistantService {
             } catch (Exception ignored) {}
         }
 
-        // 2. Extract formatted digits (e.g. "1.000", "1.500,50", "1000", "10.000,00", "45,50")
         Pattern pattern = Pattern.compile("(\\d{1,3}(?:[\\.,\\s]\\d{3})*(?:[\\.,]\\d{1,2})?|\\d+)");
         Matcher matcher = pattern.matcher(text);
 
@@ -287,7 +569,6 @@ public class VoiceAssistantService {
             Long cents = parseRawNumberToCents(raw, text);
             if (cents != null && cents > 0) {
                 bestDigitAmount = cents;
-                // If the digit amount is >= 100000 cents (R$ 1.000), return immediately
                 if (cents >= 100000) {
                     return cents;
                 }
@@ -298,7 +579,6 @@ public class VoiceAssistantService {
             return bestDigitAmount;
         }
 
-        // 3. Fallback to spoken "mil" (e.g. "gastei mil reais", "dois mil e quinhentos")
         return parseSpokenMil(lowerText);
     }
 
@@ -310,27 +590,22 @@ public class VoiceAssistantService {
                 int lastDot = clean.lastIndexOf('.');
                 int lastComma = clean.lastIndexOf(',');
                 if (lastComma > lastDot) {
-                    // Brazilian format: 1.500,50 -> 1500.50
                     clean = clean.replace(".", "").replace(',', '.');
                 } else {
-                    // US format: 1,500.50 -> 1500.50
                     clean = clean.replace(",", "");
                 }
             } else if (clean.contains(".")) {
                 int dotIndex = clean.lastIndexOf('.');
                 int digitsAfterDot = clean.length() - 1 - dotIndex;
                 if (digitsAfterDot == 3) {
-                    // Thousand separator: 1.000, 10.000
                     clean = clean.replace(".", "");
                 }
             } else if (clean.contains(",")) {
                 int commaIndex = clean.lastIndexOf(',');
                 int digitsAfterComma = clean.length() - 1 - commaIndex;
                 if (digitsAfterComma == 3) {
-                    // Thousand separator: 1,000
                     clean = clean.replace(",", "");
                 } else {
-                    // Decimal comma: 45,50
                     clean = clean.replace(',', '.');
                 }
             }
@@ -392,43 +667,12 @@ public class VoiceAssistantService {
                 .build();
     }
 
-    private List<TransactionResponse> limit(List<TransactionResponse> transactions, int size) {
-        return transactions.stream().limit(size).toList();
-    }
-
-    private String summarizeTransactions(List<TransactionResponse> transactions) {
-        return transactions.stream()
-                .map(transaction -> transaction.getDescription() + " (" + formatCurrency(transaction.getAmount()) + ")")
-                .reduce((first, second) -> first + "; " + second)
-                .orElse("");
-    }
-
     private String buildDescription(String text) {
         String trimmed = text.trim();
         if (trimmed.length() > 80) {
             trimmed = trimmed.substring(0, 77) + "...";
         }
         return "Voz: " + trimmed;
-    }
-
-    private String categoryLabel(Category category) {
-        return switch (category) {
-            case FOOD -> "alimentação/mercado";
-            case HEALTH -> "saúde";
-            case TRANSPORT -> "transporte";
-            case SHOPPING -> "compras";
-            case LEISURE -> "lazer";
-            case HOME -> "casa";
-            case EDUCATION -> "educação";
-            case SERVICES -> "serviços";
-            case INVESTMENTS -> "investimentos";
-            case SALARY -> "receita";
-            case OTHER -> "outros";
-        };
-    }
-
-    private String formatCurrency(long cents) {
-        return BRL.format(BigDecimal.valueOf(cents, 2));
     }
 
     private boolean containsAny(String text, String... terms) {

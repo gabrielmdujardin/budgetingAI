@@ -24,6 +24,9 @@ interface TransactionFormModalProps {
   onSuccess: () => void;
 }
 
+const inputClasses =
+  'w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-text outline-none transition-all focus:border-primary focus:bg-surface-hover';
+
 export function TransactionFormModal({ isOpen, onClose, onSuccess }: TransactionFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -71,45 +74,45 @@ export function TransactionFormModal({ isOpen, onClose, onSuccess }: Transaction
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-lg rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl">
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900">Nova Transação</h2>
-          <button onClick={handleClose} className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="Fechar">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-[0_0_40px_rgba(16,185,129,0.08)]">
+        <div className="flex items-center justify-between pb-4 border-b border-border">
+          <h2 className="text-lg font-bold text-text">Nova Transação</h2>
+          <button onClick={handleClose} className="rounded-lg p-1 text-text-secondary transition-colors hover:bg-surface-hover hover:text-text" aria-label="Fechar">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Descrição</label>
+            <label className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Descrição</label>
             <input
               type="text"
               {...register('description')}
               placeholder="Ex: Mercado"
-              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
+              className={inputClasses}
             />
-            {errors.description && <p className="text-xs font-semibold text-rose-600">{errors.description.message}</p>}
+            {errors.description && <p className="text-xs font-semibold text-rose-400">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Valor (R$)</label>
+            <label className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Valor (R$)</label>
             <input
               type="number"
               step="0.01"
               min="0"
               {...register('amount', { valueAsNumber: true })}
               placeholder="0,00"
-              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm font-extrabold text-gray-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
+              className={`${inputClasses} font-extrabold`}
             />
-            {errors.amount && <p className="text-xs font-semibold text-rose-600">{errors.amount.message}</p>}
+            {errors.amount && <p className="text-xs font-semibold text-rose-400">{errors.amount.message}</p>}
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Categoria</label>
+            <label className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Categoria</label>
             <select
               {...register('category')}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
+              className={inputClasses}
             >
               <option value="">Selecione...</option>
               {Object.entries(CATEGORY_LABELS).map(([key, item]) => (
@@ -118,27 +121,27 @@ export function TransactionFormModal({ isOpen, onClose, onSuccess }: Transaction
                 </option>
               ))}
             </select>
-            {errors.category && <p className="text-xs font-semibold text-rose-600">{errors.category.message}</p>}
+            {errors.category && <p className="text-xs font-semibold text-rose-400">{errors.category.message}</p>}
           </div>
 
           {submitError && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-400">
               {submitError}
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+              className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-hover hover:text-text"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-background shadow-sm transition-all hover:bg-primary/90 disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Salvar

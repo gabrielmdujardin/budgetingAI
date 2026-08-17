@@ -36,12 +36,12 @@ export function FinancialChart({ transactions }: { transactions: Transaction[] }
     .slice(-8);
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-6">
-      <h2 className="text-base font-bold tracking-tight text-gray-900 mb-6">Receitas x Despesas</h2>
+    <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 shadow-xl">
+      <h2 className="text-base font-bold tracking-tight text-text mb-6">Receitas x Despesas</h2>
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <CartesianGrid stroke="#F1F5F9" vertical={false} />
+            <CartesianGrid stroke="var(--border, rgba(80,180,140,0.15))" vertical={false} />
             <XAxis dataKey="label" stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
             <YAxis
               stroke="#94A3B8"
@@ -53,7 +53,8 @@ export function FinancialChart({ transactions }: { transactions: Transaction[] }
             <Tooltip
               formatter={(value) => formatCurrency(Number(value))}
               labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ''}
-              contentStyle={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+              contentStyle={{ background: '#0B2A22', border: '1px solid rgba(80,180,140,0.15)', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', color: '#F3F4F6' }}
+              itemStyle={{ color: '#F3F4F6' }}
             />
             <Legend wrapperStyle={{ paddingTop: 16 }} />
             <Bar dataKey="receitas" name="Receitas" fill="#10B981" radius={[4, 4, 0, 0]} />

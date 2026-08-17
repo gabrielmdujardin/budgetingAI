@@ -17,6 +17,9 @@ interface FilterBarProps {
   onClear: () => void;
 }
 
+const inputClasses =
+  'rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text outline-none transition-all focus:border-primary focus:bg-surface-hover';
+
 export function FilterBar({
   searchTerm,
   selectedCategory,
@@ -31,23 +34,23 @@ export function FilterBar({
   onClear,
 }: FilterBarProps) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4">
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4 shadow-xl">
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_180px_140px_140px_140px_auto]">
         <label className="relative">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-text-secondary" />
           <input
             type="text"
             value={searchTerm}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Buscar descrição..."
-            className="w-full rounded-xl border border-gray-200 bg-gray-50/50 py-2 pl-9 pr-3 text-sm text-gray-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
+            className={`w-full pl-9 pr-3 ${inputClasses}`}
           />
         </label>
 
         <select
           value={selectedCategory}
           onChange={(event) => onCategoryChange(event.target.value)}
-          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:bg-white"
+          className={inputClasses}
         >
           <option value="">Categoria</option>
           {Object.entries(CATEGORY_LABELS).map(([key, item]) => (
@@ -60,7 +63,7 @@ export function FilterBar({
         <select
           value={selectedType}
           onChange={(event) => onTypeChange(event.target.value)}
-          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:bg-white"
+          className={inputClasses}
         >
           <option value="">Tipo</option>
           <option value="income">Receita</option>
@@ -71,19 +74,19 @@ export function FilterBar({
           type="date"
           value={startDate}
           onChange={(event) => onStartDateChange(event.target.value)}
-          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:bg-white"
+          className={inputClasses}
         />
 
         <input
           type="date"
           value={endDate}
           onChange={(event) => onEndDateChange(event.target.value)}
-          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:bg-white"
+          className={inputClasses}
         />
 
         <button
           onClick={onClear}
-          className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+          className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-hover hover:text-text"
         >
           Limpar
         </button>

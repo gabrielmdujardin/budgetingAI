@@ -19,7 +19,7 @@ export default function CategoriesPage() {
     <div className="space-y-6">
       {/* Header — Clean single title */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Categorias</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-text">Categorias</h1>
       </div>
 
       {isLoading ? (
@@ -30,12 +30,12 @@ export default function CategoriesPage() {
             const total = summary?.categories?.[key] ?? 0;
 
             return (
-              <article key={key} className="rounded-2xl border border-gray-100 bg-white p-6 transition-all hover:border-gray-200">
+              <article key={key} className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 shadow-xl transition-all hover:bg-white/10">
                 <div className="flex items-center justify-between gap-4">
-                  <h2 className="font-bold text-gray-900">{item.label}</h2>
+                  <h2 className="font-bold text-text">{item.label}</h2>
                   <CategoryBadge category={key} compact />
                 </div>
-                <p className="mt-4 text-2xl font-extrabold tracking-tight text-gray-900">{formatCurrency(total)}</p>
+                <p className="mt-4 text-2xl font-extrabold tracking-tight text-text">{formatCurrency(total)}</p>
               </article>
             );
           })}
