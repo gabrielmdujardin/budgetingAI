@@ -76,7 +76,6 @@ function EmptyState({ orbState, onSelectSuggestion }: EmptyStateProps) {
 
       <div>
         <h2 className="text-white/90 font-bold text-xl tracking-tight">Como posso ajudar?</h2>
-        <p className="text-white/50 text-sm mt-1">Fale ou escreva um comando financeiro</p>
       </div>
 
       <div className="flex flex-wrap gap-2 justify-center max-w-md">
@@ -430,9 +429,7 @@ export default function AssistantPage() {
           </button>
         </div>
 
-        <p className="text-center text-white/30 text-xs mt-2 font-medium">
-          Pressione o microfone e fale um comando financeiro em português
-        </p>
+
       </div>
     </div>
   );

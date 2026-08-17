@@ -24,9 +24,7 @@ export function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/10 hover:text-white" aria-label="Notificações">
-            <Bell className="h-4 w-4" />
-          </button>
+          {/* Notifications removed */}
         </div>
       </div>
     </header>
