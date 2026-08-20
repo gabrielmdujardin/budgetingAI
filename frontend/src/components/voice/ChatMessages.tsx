@@ -69,6 +69,26 @@ function AssistantBubble({ message, onSpeak }: ChatBubbleProps) {
           </motion.div>
         )}
 
+        {/* Dynamic Cards list */}
+        {vr?.cards && vr.cards.length > 0 && !vr.balance && !vr.transaction && (
+          <div className="space-y-2">
+            {vr.cards.map((c: any, i: number) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 + i * 0.05 }}
+                className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 p-4 shadow-lg text-white"
+              >
+                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-100 mb-1">
+                  <Wallet className="w-3.5 h-3.5" /> {c.title}
+                </div>
+                <p className="text-2xl font-extrabold">{formatCurrency(c.value * 100)}</p>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
         {/* Transaction created card */}
         {vr?.transaction && (
           <motion.div
@@ -109,13 +129,13 @@ function AssistantBubble({ message, onSpeak }: ChatBubbleProps) {
                 const isIncome = t.type === 'income' || isIncomeCategory(t.category);
                 const dateStr = t.date || t.createdAt;
                 return (
-                  <div key={t.id} className="flex items-center justify-between gap-3 py-1.5 border-b border-border last:border-0">
+                  <div key={t.id || t.description} className="flex items-center justify-between gap-3 py-1.5 border-b border-border last:border-0">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-text truncate">{t.description}</p>
                       {dateStr && <p className="text-xs text-text-secondary">{formatDate(dateStr)}</p>}
                     </div>
                     <span className={isIncome ? 'text-sm font-extrabold text-primary shrink-0' : 'text-sm font-extrabold text-rose-400 shrink-0'}>
-                      {isIncome ? '+' : '-'} {formatCurrency(t.amount)}
+                      {isIncome ? '+' : '-'} {formatCurrency(t.amount > 1000 ? t.amount : t.amount * 100)}
                     </span>
                   </div>
                 );

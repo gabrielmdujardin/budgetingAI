@@ -23,22 +23,17 @@ import java.util.Optional;
  * <p><strong>Query Methods:</strong>
  * O Spring Data JPA interpreta o nome dos métodos e gera as queries:
  * <ul>
- *   <li>{@code findByCategory} → {@code WHERE category = ?}</li>
  *   <li>{@code findByCreatedAtBetween} → {@code WHERE created_at BETWEEN ? AND ?}</li>
  * </ul>
  *
- * <p><strong>Por que tem JPQL para o resumo mensal?</strong>
+ * <p><strong>Resumo Mensal:</strong>
  * A agregação com GROUP BY não pode ser expressa apenas pelo nome do método,
- * então usamos {@code @Query} com JPQL (linguagem de query do JPA).
+ * então usamos {@code @Query} com JPQL.
  */
 @Repository
 public interface TransactionEntityRepository extends JpaRepository<TransactionEntity, Long> {
 
-    /**
-     * Busca todas as transações de uma categoria específica.
-     * Gerado automaticamente pelo Spring Data a partir do nome do método.
-     */
-    List<TransactionEntity> findByCategory(Category category);
+
 
     /**
      * Busca transações criadas em um intervalo de datas.
@@ -56,15 +51,7 @@ public interface TransactionEntityRepository extends JpaRepository<TransactionEn
             LocalDateTime to
     );
 
-    /**
-     * Busca a transação com o maior valor (maior despesa).
-     * {@code LIMIT 1} é necessário — o Spring Data não tem query method para isso.
-     *
-     * <p>JPQL usa o nome da classe Java ({@code TransactionEntity}),
-     * não o nome da tabela SQL ({@code transactions}).
-     */
-    @Query("SELECT t FROM TransactionEntity t ORDER BY t.amount DESC LIMIT 1")
-    Optional<TransactionEntity> findTopByOrderByAmountDesc();
+
 
     /**
      * Resumo mensal: soma dos gastos agrupados por categoria.

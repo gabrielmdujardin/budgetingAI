@@ -86,6 +86,18 @@ public class TransactionService {
     }
 
 
+    @Transactional(readOnly = true)
+    public long getEstimatedBalanceCents(long openingBalanceCents) {
+        List<TransactionResponse> all = getTransactions(null, null, null);
+        long income = all.stream()
+                .filter(t -> t.getCategory() == Category.SALARY || t.getCategory() == Category.INVESTMENTS)
+                .mapToLong(TransactionResponse::getAmount).sum();
+        long expenses = all.stream()
+                .filter(t -> t.getCategory() != Category.SALARY && t.getCategory() != Category.INVESTMENTS)
+                .mapToLong(TransactionResponse::getAmount).sum();
+        return openingBalanceCents + income - expenses;
+    }
+
     @Transactional
     public void deleteTransaction(Long id) {
         if (!repository.existsById(id)) {

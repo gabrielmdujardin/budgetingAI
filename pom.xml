@@ -71,15 +71,8 @@
         </dependency>
 
         <!-- ══════════════════════════════════════════════════════
-             SPRING AI — OLLAMA (LLM local, gratuito)
+             SPRING AI — OLLAMA (LLM local)
              ══════════════════════════════════════════════════════ -->
-        <!--
-            Por que Ollama e não OpenAI?
-            - 100% local e gratuito
-            - Modelos: qwen3:8b, llama3.1:8b
-            - Suporta Tool Calling nativo
-            - Sem necessidade de API key
-        -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-ollama</artifactId>

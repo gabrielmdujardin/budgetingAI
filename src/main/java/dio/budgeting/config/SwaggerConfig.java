@@ -12,20 +12,6 @@ import java.util.List;
 
 /**
  * Configuração do Swagger / OpenAPI.
- *
- * <p>
- * SpringDoc lê automaticamente todas as anotações {@code @RestController},
- * {@code @GetMapping}, etc. e gera a especificação OpenAPI 3.0 em JSON.
- * Esta classe personaliza os metadados que aparecem na UI do Swagger.
- *
- * <p>
- * <strong>URLs disponíveis após subir a aplicação:</strong>
- * <ul>
- * <li>Swagger UI: <a href=
- * "http://localhost:8080/swagger-ui.html">http://localhost:8080/swagger-ui.html</a></li>
- * <li>JSON spec: <a href=
- * "http://localhost:8080/api-docs">http://localhost:8080/api-docs</a></li>
- * </ul>
  */
 @Configuration
 public class SwaggerConfig {
@@ -36,17 +22,15 @@ public class SwaggerConfig {
                                 .info(new Info()
                                                 .title("💰 Budgeting API — Assistente Financeiro Inteligente")
                                                 .description("""
-                                                                API de gerenciamento financeiro pessoal com IA local.
+                                                                API de gerenciamento financeiro pessoal.
 
                                                                 ## Funcionalidades
                                                                 -  **Comandos de voz** para registrar e consultar transações
-                                                                -  **IA com Ollama** (Qwen3 / Llama 3.1) — 100% local e gratuito
-                                                                -  **Tool Calling** — a IA executa funções reais da aplicação
                                                                 -  **Resumo mensal** por categoria
                                                                 -  **Exclusão** de transações por ID
 
                                                                 ## Tecnologias
-                                                                Java 21 · Spring Boot 4 · Spring AI · Ollama · MySQL · Faster-Whisper
+                                                                Java 21 · Spring Boot 4 · MySQL · Faster-Whisper
                                                                 """)
                                                 .version("1.0.0")
                                                 .contact(new Contact()
