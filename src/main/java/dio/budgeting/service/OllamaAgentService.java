@@ -45,10 +45,10 @@ public class OllamaAgentService {
             4. Para listar transações, use listTransactions.
             5. Para gastos por categoria, use getSpendingByCategory.
             6. O valor monetário deve ser em CENTAVOS (ex: R$ 50,00 = 5000 centavos).
-            7. Classifique sempre em uma destas categorias:
-               FOOD, HEALTH, TRANSPORT, SHOPPING, LEISURE, HOME, EDUCATION, SERVICES, INVESTMENTS, SALARY, OTHER
-            8. Use SALARY para receitas (salário, freelance, pagamentos recebidos).
-            9. Se o comando for ambíguo ou não entendido, use listTransactions sem filtro.
+            7. Classifique em uma destas categorias padrão: FOOD, HEALTH, TRANSPORT, SHOPPING, LEISURE, HOME, EDUCATION, SERVICES, INVESTMENTS, SALARY, OTHER.
+            8. Se o usuário mencionar uma categoria que NÃO está nas categorias padrão (ex: Tatuagem, Criptomoedas, Doação), você DEVE usar a ferramenta requestCategoryCreation para pedir confirmação antes de criar a transação.
+            9. Use SALARY para receitas (salário, freelance, pagamentos recebidos).
+            10. Se o comando for ambíguo ou não entendido, use listTransactions sem filtro.
             """;
 
     /**
@@ -120,6 +120,31 @@ public class OllamaAgentService {
         }
     }
 
+    @Tool(description = "Solicita confirmação ao usuário para criar uma NOVA categoria. Use APENAS se a categoria mencionada não estiver na lista de padrões (ex: Tatuagem).")
+    public String requestCategoryCreation(
+            @ToolParam(description = "Nome da nova categoria sugerida pelo usuário (ex: 'Tatuagem', 'Cripto')") String categoryName,
+            @ToolParam(description = "Valor da transação pendente em centavos (ex: 5000)") long amountInCents,
+            @ToolParam(description = "Descrição concisa do gasto/receita pendente (ex: 'Sessão de tatuagem')") String description,
+            @ToolParam(description = "Tipo da categoria: 'expense' para gasto, 'income' para receita") String type
+    ) {
+        AgentExecutionResult exec = CURRENT_EXECUTION.get();
+        exec.setAction("CONFIRM_NEW_CATEGORY");
+        
+        // Passamos os detalhes temporários na transação criada falsamente (não salva no banco)
+        // para que o frontend possa exibi-la no Card de Confirmação.
+        TransactionResponse pending = TransactionResponse.builder()
+            .description(description)
+            .amount(amountInCents)
+            .category(Category.OTHER)
+            .customCategory(categoryName)
+            .createdAt(java.time.LocalDateTime.now())
+            .build();
+            
+        exec.setCreatedTransaction(pending);
+        
+        return "Solicitação enviada. O usuário verá um botão na tela para confirmar a criação da categoria '" + categoryName + "'. Diga apenas: Confirme a criação na tela para continuarmos.";
+    }
+
     @Tool(description = "Retorna o saldo financeiro estimado do usuário, calculado com base nas receitas e despesas registradas.")
     public String getBalance() {
         AgentExecutionResult exec = CURRENT_EXECUTION.get();
@@ -155,14 +180,7 @@ public class OllamaAgentService {
                     ? "Nenhuma transação encontrada na categoria " + cat.name() + "."
                     : "Nenhuma transação registrada ainda.";
         }
-        StringBuilder sb = new StringBuilder("Transações encontradas (%d):\n".formatted(txs.size()));
-        txs.stream()
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .limit(15)
-                .forEach(t -> sb.append("• %s — R$ %.2f [%s] em %s\n"
-                        .formatted(t.getDescription(), t.getAmount() / 100.0,
-                                t.getCategory().name(), t.getCreatedAt().toLocalDate())));
-        return sb.toString();
+        return "Encontrei %d transações. Os detalhes foram exibidos na tela.".formatted(txs.size());
     }
 
     @Tool(description = "Retorna o total gasto por categoria no mês atual. Use quando o usuário perguntar quanto gastou em uma categoria específica ou no geral.")
@@ -181,14 +199,10 @@ public class OllamaAgentService {
         if (cat != null) {
             Long amount = summary.getCategories().get(cat);
             return amount != null
-                    ? "Gastos em %s este mês: R$ %.2f".formatted(cat.name(), amount / 100.0)
-                    : "Nenhum gasto em %s este mês.".formatted(cat.name());
+                    ? "Os gastos em %s este mês somam R$ %.2f. Detalhes na tela.".formatted(cat.name(), amount / 100.0)
+                    : "Nenhum gasto registrado em %s este mês.".formatted(cat.name());
         }
-        StringBuilder sb = new StringBuilder("Gastos por categoria este mês:\n");
-        summary.getCategories().forEach((c, amount) ->
-                sb.append("• %s: R$ %.2f\n".formatted(c.name(), amount / 100.0)));
-        sb.append("Total de despesas: R$ %.2f".formatted(summary.getTotalExpenses() / 100.0));
-        return sb.toString();
+        return "Resumo de gastos do mês gerado com sucesso. Detalhes exibidos na tela.";
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

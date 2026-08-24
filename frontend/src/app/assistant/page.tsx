@@ -122,6 +122,61 @@ export default function AssistantPage() {
     };
   }, []);
 
+  /* ── Confirm Custom Category Handler ── */
+  useEffect(() => {
+    const handleConfirmCategory = async (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const pendingTx = customEvent.detail;
+      if (!pendingTx) return;
+
+      setIsProcessing(true);
+      setOrbState('thinking');
+
+      let amountCents = pendingTx.amountInCents;
+      if (!amountCents || amountCents <= 0) {
+        if (typeof pendingTx.amountReais === 'number' && pendingTx.amountReais > 0) {
+          amountCents = Math.round(pendingTx.amountReais * 100);
+        } else if (typeof pendingTx.amount === 'number' && pendingTx.amount > 0) {
+          amountCents = Math.round(pendingTx.amount * 100);
+        }
+      }
+
+      if (!amountCents || amountCents <= 0) {
+        pushAssistantMessage('Por favor, digite um valor em reais maior que zero para registrar a transação.');
+        setOrbState('idle');
+        setIsProcessing(false);
+        return;
+      }
+
+      try {
+        await transactionService.createTransaction({
+          description: pendingTx.description || `Lançamento em ${pendingTx.customCategory}`,
+          amount: amountCents,
+          category: 'OTHER' as any,
+          customCategory: pendingTx.customCategory,
+        });
+
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        queryClient.invalidateQueries({ queryKey: ['summary'] });
+
+        setOrbState('speaking');
+        pushAssistantMessage(`Categoria **${pendingTx.customCategory}** confirmada! Transação de **R$ ${(amountCents / 100).toFixed(2).replace('.', ',')}** registrada.`);
+        speakText(`Categoria ${pendingTx.customCategory} confirmada com sucesso.`);
+
+        setTimeout(() => setOrbState('idle'), 3000);
+      } catch (err) {
+        console.error('Erro ao criar transação customizada:', err);
+        pushAssistantMessage('Ocorreu um erro ao criar a categoria no backend. Verifique os dados e tente novamente.');
+        setOrbState('idle');
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    window.addEventListener('confirmCategoryCreation', handleConfirmCategory);
+    return () => window.removeEventListener('confirmCategoryCreation', handleConfirmCategory);
+  }, [queryClient]);
+
   /* ── Recording Controls ── */
   const startRecording = async () => {
     try {

@@ -6,3 +6,8 @@ frontend/.next/
 frontend/node_modules/
 frontend/out/
 node_modules/
+*.pdf
+*.docx
+*.csv
+*.png
+*.jpg

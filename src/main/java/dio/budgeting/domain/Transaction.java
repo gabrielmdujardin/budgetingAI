@@ -32,6 +32,7 @@ public class Transaction {
     private String description;
     private Long amount;          // em centavos
     private Category category;
+    private String customCategory;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

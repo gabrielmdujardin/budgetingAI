@@ -71,6 +71,13 @@ public class TransactionEntity {
     private Category category;
 
     /**
+     * Categoria customizada criada pelo usuário dinamicamente via IA.
+     * Preenchido apenas quando a category for OTHER (ou quando aplicável).
+     */
+    @Column(length = 50)
+    private String customCategory;
+
+    /**
      * Data/hora de criação — preenchida automaticamente pelo Spring Data JPA.
      * updatable = false: este campo nunca é alterado após a criação.
      */

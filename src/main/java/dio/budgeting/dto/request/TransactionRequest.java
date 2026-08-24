@@ -29,4 +29,7 @@ public class TransactionRequest {
     @NotNull(message = "A categoria é obrigatória")
     @Schema(description = "Categoria financeira da transação", example = "FOOD")
     private Category category;
+
+    @Schema(description = "Categoria customizada caso a categoria principal seja OTHER", example = "Tatuagem")
+    private String customCategory;
 }

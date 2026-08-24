@@ -23,6 +23,7 @@ public class TransactionMapper {
                 .description(entity.getDescription())
                 .amount(entity.getAmount())
                 .category(entity.getCategory())
+                .customCategory(entity.getCustomCategory())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -35,6 +36,7 @@ public class TransactionMapper {
                 .description(entity.getDescription())
                 .amount(entity.getAmount())
                 .category(entity.getCategory())
+                .customCategory(entity.getCustomCategory())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -47,6 +49,7 @@ public class TransactionMapper {
                 .description(domain.getDescription())
                 .amount(domain.getAmount())
                 .category(domain.getCategory())
+                .customCategory(domain.getCustomCategory())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();

@@ -153,15 +153,81 @@ public class VoiceAssistantService {
     }
 
     public VoiceResponse interpretTextAndExecute(String text) {
-        // ── Camada 1: Ollama easoning + tool calling ──
-        String ollamaResponse = ollamaAgentService.processCommand(text);
-        if (ollamaResponse != null && !ollamaResponse.isBlank()) {
+        // ── Camada 1: Ollama reasoning + tool calling ──
+        dio.budgeting.dto.AgentExecutionResult exec = ollamaAgentService.processCommandDetailed(text);
+        if (exec != null && exec.getResponseText() != null && !exec.getResponseText().isBlank()) {
+            String action = exec.getAction();
+            
+            if ("LIST_TRANSACTIONS".equals(action)) {
+                List<TransactionResponse> txs = exec.getFetchedTransactions() != null ? exec.getFetchedTransactions() : List.of();
+                long totalCents = txs.stream().mapToLong(TransactionResponse::getAmount).sum();
+                int count = txs.size();
+                
+                String speechText = txs.isEmpty() 
+                    ? "Não encontrei transações registradas." 
+                    : buildExpensesSpeechNarrative(count, totalCents, txs);
+                
+                List<StructuredTransactionPayload> structuredTxs = txs.stream().map(this::toStructuredPayload).toList();
+                return VoiceResponse.builder()
+                        .action(action)
+                        .transcription(text)
+                        .summary(buildSummary(txs))
+                        .message(MessagePayload.builder().text(exec.getResponseText()).speech(speechText).build())
+                        .cards(List.of(CardPayload.builder().type("summary").title("Total").value(centsToDouble(totalCents)).build()))
+                        .transactions(structuredTxs)
+                        .build();
+            } else if ("CREATE_TRANSACTION".equals(action) && exec.getCreatedTransaction() != null) {
+                TransactionResponse tx = exec.getCreatedTransaction();
+                boolean isIncome = INCOME_CATEGORIES.contains(tx.getCategory());
+                String speechText = (isIncome ? "Você recebeu " : "Você gastou ") + formatMoneyToSpeech(tx.getAmount());
+                
+                return VoiceResponse.builder()
+                        .action(action)
+                        .transcription(text)
+                        .transaction(tx)
+                        .message(MessagePayload.builder().text(exec.getResponseText()).speech(speechText).build())
+                        .cards(List.of(CardPayload.builder().type(isIncome ? "income" : "expense").title(isIncome ? "Recebeu" : "Gastou").value(centsToDouble(tx.getAmount())).build()))
+                        .transactions(List.of(toStructuredPayload(tx)))
+                        .build();
+            } else if ("CONFIRM_NEW_CATEGORY".equals(action) && exec.getCreatedTransaction() != null) {
+                TransactionResponse pending = exec.getCreatedTransaction();
+                return VoiceResponse.builder()
+                        .action(action)
+                        .transcription(text)
+                        .transaction(pending)
+                        .message(MessagePayload.builder().text(exec.getResponseText()).speech("Deseja criar esta nova categoria? Confirme na tela.").build())
+                        .cards(List.of(CardPayload.builder().type("confirm_category").title("Criar nova categoria?").value(centsToDouble(pending.getAmount())).build()))
+                        .transactions(List.of(toStructuredPayload(pending)))
+                        .build();
+            } else if ("BALANCE".equals(action)) {
+                VoiceResponse fallbackResp = buildBalanceResponse(text);
+                fallbackResp.getMessage().setText(exec.getResponseText());
+                return fallbackResp;
+            } else if ("SPENDING_BY_CATEGORY".equals(action) && exec.getSummary() != null) {
+                SummaryResponse summary = exec.getSummary();
+                List<CardPayload> cards = new java.util.ArrayList<>();
+                if (exec.getFilterCategory() != null) {
+                    Long amount = summary.getCategories().get(exec.getFilterCategory());
+                    cards.add(CardPayload.builder().type("summary").title("Gasto em " + categoryLabelReadable(exec.getFilterCategory())).value(centsToDouble(amount != null ? amount : 0L)).build());
+                } else {
+                    cards.add(CardPayload.builder().type("summary").title("Total de gastos").value(centsToDouble(summary.getTotalExpenses())).build());
+                }
+                return VoiceResponse.builder()
+                        .action(action)
+                        .transcription(text)
+                        .summary(summary)
+                        .message(MessagePayload.builder().text(exec.getResponseText()).speech("Resumo de gastos gerado com sucesso. Detalhes na tela.").build())
+                        .cards(cards)
+                        .transactions(List.of())
+                        .build();
+            }
+
             return VoiceResponse.builder()
-                    .action("AI_RESPONSE")
+                    .action(action != null ? action : "AI_RESPONSE")
                     .transcription(text)
                     .message(MessagePayload.builder()
-                            .text(ollamaResponse)
-                            .speech(ollamaResponse)
+                            .text(exec.getResponseText())
+                            .speech(exec.getResponseText())
                             .build())
                     .cards(List.of())
                     .transactions(List.of())
@@ -380,13 +446,17 @@ public class VoiceAssistantService {
 
         String formattedDate = tx.getCreatedAt() != null ? tx.getCreatedAt().format(ISO_FORMATTER)
                 : LocalDateTime.now().format(ISO_FORMATTER);
+                
+        String categoryLabel = (tx.getCustomCategory() != null && !tx.getCustomCategory().isBlank()) 
+                ? tx.getCustomCategory() 
+                : categoryLabelReadable(tx.getCategory());
 
         return StructuredTransactionPayload.builder()
                 .id(String.valueOf(tx.getId()))
                 .type(isIncome ? "income" : "expense")
                 .description(cleanDescription)
                 .amount(centsToDouble(tx.getAmount()))
-                .category(categoryLabelReadable(tx.getCategory()))
+                .category(categoryLabel)
                 .date(formattedDate)
                 .source("voice")
                 .build();

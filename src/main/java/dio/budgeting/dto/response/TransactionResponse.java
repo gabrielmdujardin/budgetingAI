@@ -27,6 +27,7 @@ public class TransactionResponse {
 
     @Schema(description = "Categoria da transação", example = "FOOD")
     private Category category;
+    private String customCategory;
 
     @Schema(description = "Data e hora de criação", example = "2026-08-05T11:30:00")
     private LocalDateTime createdAt;
