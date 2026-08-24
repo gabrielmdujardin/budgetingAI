@@ -53,17 +53,26 @@ public class VoiceAssistantService {
     private static final Set<Category> INCOME_CATEGORIES = Set.of(Category.SALARY, Category.INVESTMENTS);
 
     private static final Map<Category, List<String>> CATEGORY_KEYWORDS = Map.ofEntries(
-            Map.entry(Category.FOOD, List.of("mercado", "supermercado", "almoço", "almoco", "comida", "restaurante", "delivery", "ifood", "lanche")),
-            Map.entry(Category.TRANSPORT, List.of("uber", "gasolina", "combustível", "combustivel", "transporte", "ônibus", "onibus", "metro", "metrô")),
-            Map.entry(Category.HEALTH, List.of("remédio", "remedio", "farmácia", "farmacia", "médico", "medico", "consulta", "saúde", "saude")),
+            Map.entry(Category.FOOD,
+                    List.of("mercado", "supermercado", "almoço", "almoco", "comida", "restaurante", "delivery", "ifood",
+                            "lanche")),
+            Map.entry(Category.TRANSPORT,
+                    List.of("uber", "gasolina", "combustível", "combustivel", "transporte", "ônibus", "onibus", "metro",
+                            "metrô")),
+            Map.entry(Category.HEALTH,
+                    List.of("remédio", "remedio", "farmácia", "farmacia", "médico", "medico", "consulta", "saúde",
+                            "saude")),
             Map.entry(Category.LEISURE, List.of("cinema", "viagem", "jogo", "lazer", "show", "bar")),
-            Map.entry(Category.HOME, List.of("aluguel", "condomínio", "condominio", "luz", "energia", "água", "agua", "casa", "internet")),
+            Map.entry(Category.HOME,
+                    List.of("aluguel", "condomínio", "condominio", "luz", "energia", "água", "agua", "casa",
+                            "internet")),
             Map.entry(Category.EDUCATION, List.of("curso", "livro", "faculdade", "escola", "educação", "educacao")),
             Map.entry(Category.SALARY, List.of("salário", "salario", "recebi", "renda", "freelance", "pagamento")),
-            Map.entry(Category.SHOPPING, List.of("roupa", "shopping", "compra", "presente", "eletrônico", "eletronico")),
-            Map.entry(Category.INVESTMENTS, List.of("investimento", "investi", "cdb", "poupança", "poupanca", "ação", "acao")),
-            Map.entry(Category.SERVICES, List.of("serviço", "servico", "academia", "assinatura"))
-    );
+            Map.entry(Category.SHOPPING,
+                    List.of("roupa", "shopping", "compra", "presente", "eletrônico", "eletronico")),
+            Map.entry(Category.INVESTMENTS,
+                    List.of("investimento", "investi", "cdb", "poupança", "poupanca", "ação", "acao")),
+            Map.entry(Category.SERVICES, List.of("serviço", "servico", "academia", "assinatura")));
 
     private static final Map<String, Long> THOUSANDS_WORDS = Map.ofEntries(
             Map.entry("dez mil", 10000L), Map.entry("nove mil", 9000L),
@@ -71,16 +80,14 @@ public class VoiceAssistantService {
             Map.entry("seis mil", 6000L), Map.entry("cinco mil", 5000L),
             Map.entry("quatro mil", 4000L), Map.entry("três mil", 3000L),
             Map.entry("tres mil", 3000L), Map.entry("dois mil", 2000L),
-            Map.entry("um mil", 1000L), Map.entry("mil", 1000L)
-    );
+            Map.entry("um mil", 1000L), Map.entry("mil", 1000L));
 
     private static final Map<String, Long> HUNDREDS_WORDS = Map.ofEntries(
             Map.entry("novecentos", 900L), Map.entry("oitocentos", 800L),
             Map.entry("setecentos", 700L), Map.entry("seiscentos", 600L),
             Map.entry("quinhentos", 500L), Map.entry("quatrocentos", 400L),
             Map.entry("trezentos", 300L), Map.entry("duzentos", 200L),
-            Map.entry("cem", 100L), Map.entry("cento", 100L)
-    );
+            Map.entry("cem", 100L), Map.entry("cento", 100L));
 
     public VoiceResponse processVoiceCommand(MultipartFile audioFile) {
         if (audioFile == null || audioFile.isEmpty()) {
@@ -146,13 +153,22 @@ public class VoiceAssistantService {
     }
 
     public VoiceResponse interpretTextAndExecute(String text) {
-        // ── Camada 1: Ollama (reasoning + tool calling + structured payload) ──
-        dio.budgeting.dto.AgentExecutionResult agentResult = ollamaAgentService.processCommandDetailed(text);
-        if (agentResult != null && agentResult.getResponseText() != null && !agentResult.getResponseText().isBlank()) {
-            return buildEnrichedOllamaResponse(text, agentResult);
+        // ── Camada 1: Ollama easoning + tool calling ──
+        String ollamaResponse = ollamaAgentService.processCommand(text);
+        if (ollamaResponse != null && !ollamaResponse.isBlank()) {
+            return VoiceResponse.builder()
+                    .action("AI_RESPONSE")
+                    .transcription(text)
+                    .message(MessagePayload.builder()
+                            .text(ollamaResponse)
+                            .speech(ollamaResponse)
+                            .build())
+                    .cards(List.of())
+                    .transactions(List.of())
+                    .build();
         }
 
-        // ── Camada 2: Fallback por Regex (caso Ollama falhe ou esteja offline) ──
+        // ── Camada 2: Fallback por Regex ──
         log.warn("Ollama indisponível ou retornou vazio. Usando fallback por Regex.");
         String lowerText = text.toLowerCase(PT_BR);
 
@@ -171,77 +187,9 @@ public class VoiceAssistantService {
         return buildCreateTransactionResponse(text, lowerText);
     }
 
-    private VoiceResponse buildEnrichedOllamaResponse(String transcription, dio.budgeting.dto.AgentExecutionResult agentResult) {
-        String action = agentResult.getAction();
-        if (action == null) action = "AI_RESPONSE";
-
-        switch (action) {
-            case "CREATE_TRANSACTION": {
-                TransactionResponse tx = agentResult.getCreatedTransaction();
-                if (tx != null) {
-                    boolean isIncome = INCOME_CATEGORIES.contains(tx.getCategory());
-                    String actionType = isIncome ? "income" : "expense";
-                    String verb = isIncome ? "Receita" : "Gasto";
-                    String chatText = "Registrado! **" + tx.getDescription() + "** no valor de **" + formatCurrency(tx.getAmount()) + "** em **" + categoryLabelReadable(tx.getCategory()) + "**.";
-                    String speechText = (isIncome ? "Você recebeu " : "Você gastou ") + formatMoneyToSpeech(tx.getAmount()) + " no " + tx.getDescription().replace("Voz: ", "");
-
-                    return VoiceResponse.builder()
-                            .action("CREATE_TRANSACTION")
-                            .transcription(transcription)
-                            .transaction(tx)
-                            .message(MessagePayload.builder()
-                                    .text(chatText)
-                                    .speech(speechText)
-                                    .build())
-                            .cards(List.of(CardPayload.builder()
-                                    .type(actionType)
-                                    .title(verb + " registrado")
-                                    .value(centsToDouble(tx.getAmount()))
-                                    .build()))
-                            .transactions(List.of(toStructuredPayload(tx)))
-                            .build();
-                }
-                break;
-            }
-            case "BALANCE": {
-                return buildBalanceResponse(transcription);
-            }
-            case "LIST_TRANSACTIONS":
-            case "SPENDING_BY_CATEGORY": {
-                return buildTransactionsResponse(transcription, agentResult.getFilterCategory());
-            }
-        }
-
-        String rawText = agentResult.getResponseText();
-        String cleanSpeech = sanitizeMarkdownForSpeech(rawText);
-
-        return VoiceResponse.builder()
-                .action("AI_RESPONSE")
-                .transcription(transcription)
-                .message(MessagePayload.builder()
-                        .text(rawText)
-                        .speech(cleanSpeech)
-                        .build())
-                .cards(List.of())
-                .transactions(List.of())
-                .build();
-    }
-
-    private String sanitizeMarkdownForSpeech(String raw) {
-        if (raw == null) return "";
-        return raw.replaceAll("\\*\\*", "")
-                .replaceAll("\\*", "")
-                .replaceAll("#", "")
-                .replaceAll("•", "")
-                .replaceAll("`", "")
-                .replaceAll("—", " ")
-                .replaceAll("-", " ")
-                .replaceAll("\\s+", " ")
-                .trim();
-    }
-
     private boolean isIncomeIntent(String text) {
-        return text.contains("receita") || text.contains("receitas") || text.contains("quanto recebi") || text.contains("meus ganhos");
+        return text.contains("receita") || text.contains("receitas") || text.contains("quanto recebi")
+                || text.contains("meus ganhos");
     }
 
     private VoiceResponse buildBalanceResponse(String transcription) {
@@ -340,7 +288,8 @@ public class VoiceAssistantService {
             chatText = "Não encontrei **gastos**" + scopeText + ".";
             speechText = "Não encontrei gastos" + scopeSpeech + " até o momento.";
         } else {
-            chatText = "Encontrei **" + count + " " + (count == 1 ? "gasto" : "gastos") + "**" + scopeText + ", totalizando **" + formatCurrency(totalCents) + "**.";
+            chatText = "Encontrei **" + count + " " + (count == 1 ? "gasto" : "gastos") + "**" + scopeText
+                    + ", totalizando **" + formatCurrency(totalCents) + "**.";
             speechText = buildExpensesSpeechNarrative(count, totalCents, transactions);
         }
 
@@ -397,8 +346,10 @@ public class VoiceAssistantService {
         String actionType = isIncome ? "income" : "expense";
         String verb = isIncome ? "Recebeu" : "Gastou";
 
-        String chatText = "Registrado! **" + tx.getDescription() + "** no valor de **" + formatCurrency(tx.getAmount()) + "** em **" + categoryLabelReadable(finalCategory) + "**.";
-        String speechText = (isIncome ? "Você recebeu " : "Você gastou ") + formatMoneyToSpeech(tx.getAmount()) + " no " + tx.getDescription().replace("Voz: ", "");
+        String chatText = "Registrado! **" + tx.getDescription() + "** no valor de **" + formatCurrency(tx.getAmount())
+                + "** em **" + categoryLabelReadable(finalCategory) + "**.";
+        String speechText = (isIncome ? "Você recebeu " : "Você gastou ") + formatMoneyToSpeech(tx.getAmount()) + " no "
+                + tx.getDescription().replace("Voz: ", "");
 
         StructuredTransactionPayload structuredTx = toStructuredPayload(tx);
 
@@ -427,7 +378,8 @@ public class VoiceAssistantService {
                 ? tx.getDescription().substring(5)
                 : tx.getDescription();
 
-        String formattedDate = tx.getCreatedAt() != null ? tx.getCreatedAt().format(ISO_FORMATTER) : LocalDateTime.now().format(ISO_FORMATTER);
+        String formattedDate = tx.getCreatedAt() != null ? tx.getCreatedAt().format(ISO_FORMATTER)
+                : LocalDateTime.now().format(ISO_FORMATTER);
 
         return StructuredTransactionPayload.builder()
                 .id(String.valueOf(tx.getId()))
@@ -443,14 +395,15 @@ public class VoiceAssistantService {
     private String buildExpensesSpeechNarrative(int count, long totalCents, List<TransactionResponse> txs) {
         StringBuilder sb = new StringBuilder();
         sb.append("Encontrei ").append(numberToSpokenText(count)).append(count == 1 ? " gasto" : " gastos")
-          .append(", totalizando ").append(formatMoneyToSpeech(totalCents)).append(". ");
+                .append(", totalizando ").append(formatMoneyToSpeech(totalCents)).append(". ");
 
         int limit = Math.min(txs.size(), 4);
         if (limit > 0) {
             List<String> items = new ArrayList<>();
             for (int i = 0; i < limit; i++) {
                 TransactionResponse t = txs.get(i);
-                String desc = t.getDescription() != null ? t.getDescription().replace("Voz: ", "") : categoryLabelReadable(t.getCategory());
+                String desc = t.getDescription() != null ? t.getDescription().replace("Voz: ", "")
+                        : categoryLabelReadable(t.getCategory());
                 items.add(formatMoneyToSpeech(t.getAmount()) + " no " + desc);
             }
             sb.append("Você gastou ");
@@ -472,7 +425,8 @@ public class VoiceAssistantService {
     }
 
     private String formatMoneyToSpeech(long cents) {
-        if (cents == 0) return "zero reais";
+        if (cents == 0)
+            return "zero reais";
 
         long reais = cents / 100;
         long centavos = cents % 100;
@@ -494,45 +448,84 @@ public class VoiceAssistantService {
     }
 
     private String numberToSpokenText(long n) {
-        if (n < 0) return "menos " + numberToSpokenText(-n);
-        if (n == 0) return "zero";
-        if (n == 1) return "um";
-        if (n == 2) return "dois";
-        if (n == 3) return "três";
-        if (n == 4) return "quatro";
-        if (n == 5) return "cinco";
-        if (n == 6) return "seis";
-        if (n == 7) return "sete";
-        if (n == 8) return "oito";
-        if (n == 9) return "nove";
-        if (n == 10) return "dez";
-        if (n == 11) return "onze";
-        if (n == 12) return "doze";
-        if (n == 13) return "treze";
-        if (n == 14) return "quatorze";
-        if (n == 15) return "quinze";
-        if (n == 16) return "dezesseis";
-        if (n == 17) return "dezessete";
-        if (n == 18) return "dezoito";
-        if (n == 19) return "dezenove";
-        if (n == 20) return "vinte";
-        if (n == 30) return "trinta";
-        if (n == 40) return "quarenta";
-        if (n == 50) return "cinquenta";
-        if (n == 60) return "sessenta";
-        if (n == 70) return "setenta";
-        if (n == 80) return "oitenta";
-        if (n == 90) return "noventa";
-        if (n == 100) return "cem";
-        if (n == 200) return "duzentos";
-        if (n == 300) return "trezentos";
-        if (n == 400) return "quatrocentos";
-        if (n == 500) return "quinhentos";
-        if (n == 600) return "seiscentos";
-        if (n == 700) return "setecentos";
-        if (n == 800) return "oitocentos";
-        if (n == 900) return "novecentos";
-        if (n == 1000) return "mil";
+        if (n < 0)
+            return "menos " + numberToSpokenText(-n);
+        if (n == 0)
+            return "zero";
+        if (n == 1)
+            return "um";
+        if (n == 2)
+            return "dois";
+        if (n == 3)
+            return "três";
+        if (n == 4)
+            return "quatro";
+        if (n == 5)
+            return "cinco";
+        if (n == 6)
+            return "seis";
+        if (n == 7)
+            return "sete";
+        if (n == 8)
+            return "oito";
+        if (n == 9)
+            return "nove";
+        if (n == 10)
+            return "dez";
+        if (n == 11)
+            return "onze";
+        if (n == 12)
+            return "doze";
+        if (n == 13)
+            return "treze";
+        if (n == 14)
+            return "quatorze";
+        if (n == 15)
+            return "quinze";
+        if (n == 16)
+            return "dezesseis";
+        if (n == 17)
+            return "dezessete";
+        if (n == 18)
+            return "dezoito";
+        if (n == 19)
+            return "dezenove";
+        if (n == 20)
+            return "vinte";
+        if (n == 30)
+            return "trinta";
+        if (n == 40)
+            return "quarenta";
+        if (n == 50)
+            return "cinquenta";
+        if (n == 60)
+            return "sessenta";
+        if (n == 70)
+            return "setenta";
+        if (n == 80)
+            return "oitenta";
+        if (n == 90)
+            return "noventa";
+        if (n == 100)
+            return "cem";
+        if (n == 200)
+            return "duzentos";
+        if (n == 300)
+            return "trezentos";
+        if (n == 400)
+            return "quatrocentos";
+        if (n == 500)
+            return "quinhentos";
+        if (n == 600)
+            return "seiscentos";
+        if (n == 700)
+            return "setecentos";
+        if (n == 800)
+            return "oitocentos";
+        if (n == 900)
+            return "novecentos";
+        if (n == 1000)
+            return "mil";
 
         if (n > 20 && n < 100) {
             long tens = (n / 10) * 10;
@@ -551,8 +544,10 @@ public class VoiceAssistantService {
             long thousands = n / 1000;
             long rest = n % 1000;
             String prefix = (thousands == 1) ? "mil" : numberToSpokenText(thousands) + " mil";
-            if (rest == 0) return prefix;
-            if (rest < 100 || rest % 100 == 0) return prefix + " e " + numberToSpokenText(rest);
+            if (rest == 0)
+                return prefix;
+            if (rest < 100 || rest % 100 == 0)
+                return prefix + " e " + numberToSpokenText(rest);
             return prefix + " " + numberToSpokenText(rest);
         }
 
@@ -564,7 +559,8 @@ public class VoiceAssistantService {
     }
 
     private String categoryLabelReadable(Category category) {
-        if (category == null) return "Geral";
+        if (category == null)
+            return "Geral";
         return switch (category) {
             case FOOD -> "Alimentação";
             case HEALTH -> "Saúde";
@@ -587,11 +583,13 @@ public class VoiceAssistantService {
     /* ── Intent and Parsing Helpers ── */
 
     private boolean isBalanceIntent(String text) {
-        return containsAny(text, "saldo", "quanto tenho", "quanto eu tenho", "dinheiro tenho", "disponível", "disponivel");
+        return containsAny(text, "saldo", "quanto tenho", "quanto eu tenho", "dinheiro tenho", "disponível",
+                "disponivel");
     }
 
     private boolean isListIntent(String text) {
-        return containsAny(text, "liste", "listar", "lista", "mostre", "mostrar", "quais são", "quais foram", "transações", "transacoes", "lançamentos", "lancamentos");
+        return containsAny(text, "liste", "listar", "lista", "mostre", "mostrar", "quais são", "quais foram",
+                "transações", "transacoes", "lançamentos", "lancamentos");
     }
 
     private boolean isExpenseQuestion(String text) {
@@ -613,13 +611,15 @@ public class VoiceAssistantService {
 
         String lowerText = text.toLowerCase(PT_BR);
 
-        Matcher milMatcher = Pattern.compile("(\\d+(?:[\\.,]\\d{1,2})?)\\s*mil", Pattern.CASE_INSENSITIVE).matcher(lowerText);
+        Matcher milMatcher = Pattern.compile("(\\d+(?:[\\.,]\\d{1,2})?)\\s*mil", Pattern.CASE_INSENSITIVE)
+                .matcher(lowerText);
         if (milMatcher.find()) {
             try {
                 String raw = milMatcher.group(1).replace(',', '.');
                 BigDecimal val = new BigDecimal(raw).multiply(BigDecimal.valueOf(1000));
                 return val.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         Pattern pattern = Pattern.compile("(\\d{1,3}(?:[\\.,\\s]\\d{3})*(?:[\\.,]\\d{1,2})?|\\d+)");
@@ -683,7 +683,8 @@ public class VoiceAssistantService {
     }
 
     private Long parseSpokenMil(String text) {
-        if (!text.contains("mil")) return null;
+        if (!text.contains("mil"))
+            return null;
 
         long thousands = THOUSANDS_WORDS.entrySet().stream()
                 .filter(entry -> text.contains(entry.getKey()))
@@ -691,7 +692,8 @@ public class VoiceAssistantService {
                 .findFirst()
                 .orElse(0L);
 
-        if (thousands == 0) return null;
+        if (thousands == 0)
+            return null;
 
         long rest = HUNDREDS_WORDS.entrySet().stream()
                 .filter(entry -> text.contains(entry.getKey()))
@@ -707,8 +709,7 @@ public class VoiceAssistantService {
                 .collect(java.util.stream.Collectors.groupingBy(
                         TransactionResponse::getCategory,
                         () -> new java.util.EnumMap<>(Category.class),
-                        java.util.stream.Collectors.summingLong(TransactionResponse::getAmount)
-                ));
+                        java.util.stream.Collectors.summingLong(TransactionResponse::getAmount)));
 
         long total = transactions.stream().mapToLong(TransactionResponse::getAmount).sum();
 
